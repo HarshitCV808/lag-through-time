@@ -55,7 +55,9 @@ addEventListener('keydown', firstGesture, true);
   ]);
   // Render at device pixels and zoom down, so text stays crisp on phones.
   // Canvas renderer: this game is shapes + text, and it avoids WebGL failures on store kiosks.
-  const size = () => [Math.max(320, innerWidth) * DPR, Math.max(320, innerHeight) * DPR];
+  // Whole device pixels; CSS (index.html) pins the canvas to exactly the viewport, so a
+  // fractional density like 2.625 never stretches the canvas by a sub-pixel and blurs it.
+  const size = () => [Math.round(Math.max(320, innerWidth) * DPR), Math.round(Math.max(320, innerHeight) * DPR)];
   const [w, h] = size();
   const game = new Phaser.Game({
     type: Phaser.CANVAS,

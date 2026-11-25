@@ -13,6 +13,7 @@
   html, body { margin: 0; height: 100%; background: #060d2b; overflow: hidden; overscroll-behavior: none; }
   body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
   #game { position: fixed; inset: 0; }
+  #game canvas { display: block; width: 100% !important; height: 100% !important; }
   #mute {
     position: fixed; z-index: 2; width: 44px; height: 44px; padding: 0;
     top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right));

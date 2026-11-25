@@ -6,7 +6,8 @@ import { music, sfx } from '../audio.js';
 
 const WORDS = ['DIR', 'RUN', 'PRINT'];
 const DECOYS = 'AEKLMOSTXZ';
-const LAG_MS = 380; // every keystroke echoes late, like a 4.77 MHz machine
+const LAG_MS = 900; // every keystroke echoes late, like a 4.77 MHz machine
+const SPIN = ['|', '/', '-', '\\'];
 
 export default class Level1Dos extends Base {
   constructor() { super('L1'); }
@@ -19,6 +20,8 @@ export default class Level1Dos extends Base {
     this.makeHud('Level 1 of 4   1981');
     this.goal = this.add.text(0, 0, '', { fontFamily: 'VT323', color: '#b6ffcc' });
     this.term = this.add.text(0, 0, '', { fontFamily: 'VT323', color: this.th.ink });
+    // Shows the lag: keys you pressed waiting for the CPU, and a spinner while it is busy.
+    this.bufT = this.add.text(0, 0, '', { fontFamily: 'VT323', color: '#ffd23f' });
     this.time.addEvent({ delay: 500, loop: true, callback: () => { this.cursorOn = !this.cursorOn; this.render(); } });
     this.time.addEvent({ delay: LAG_MS, loop: true, callback: () => this.flush() });
     this.ask({
@@ -81,6 +84,10 @@ export default class Level1Dos extends Base {
     const next = this.word[this.typed.length + this.queue.length];
     if (ch !== next) { sfx('no'); this.cameras.main.shake(120, 0.004); return; }
     this.queue.push(ch);
+    sfx('pop');
+    // The key visibly goes down now; the letter only appears on screen much later.
+    const k = this.keys.find((b) => b.t.text === ch);
+    if (k) { k.setAlpha(0.35); this.time.delayedCall(LAG_MS * this.queue.length, () => k.active && k.setAlpha(1)); }
   }
 
   flush() {
@@ -104,7 +111,7 @@ export default class Level1Dos extends Base {
     } else if (word === 'RUN') {
       this.setGoal('LOADING…');
       this.lines.push('LOADING HOMEWORK.BAS ');
-      this.dots(6, 1800, () => {
+      this.dots(6, 2600, () => {
         this.lines.push('INSERT DISK 2, THEN TAP THE DISK');
         this.setGoal('TAP THE FLOPPY DISK');
         this.showDisk();
@@ -112,7 +119,7 @@ export default class Level1Dos extends Base {
     } else {
       this.setGoal('PRINTING…');
       this.lines.push('PRINTING ');
-      this.dots(6, 1800, () => {
+      this.dots(6, 2600, () => {
         this.lines.push('DONE. TEXT ONLY. NO PHOTOS, NO COLOUR.');
         this.render();
         this.finish();
@@ -151,7 +158,7 @@ export default class Level1Dos extends Base {
       this.disk = null;
       this.lines.push('READING DISK 2 ');
       this.setGoal('READING DISK…');
-      this.dots(5, 1500, () => {
+      this.dots(5, 2000, () => {
         this.lines.push('HOMEWORK READY.', '');
         this.next();
       });
@@ -200,9 +207,10 @@ export default class Level1Dos extends Base {
     const pad = s(18);
     const y = this.layoutHud();
     this.goal.setPosition(pad, y).setFontSize(s(30));
+    this.bufT.setPosition(pad, y + s(36)).setFontSize(s(24));
     const rows = this.portrait ? 2 : 1;
     this.keysTop = this.H - pad - rows * s(64) - (rows - 1) * s(12);
-    this.termTop = y + s(44);
+    this.termTop = y + s(74);
     this.term.setPosition(pad, this.termTop).setFontSize(s(24)).setWordWrapWidth(this.W - pad * 2, true);
     this.placeKeys();
     this.placeDisk();
@@ -219,7 +227,14 @@ export default class Level1Dos extends Base {
     this.term.setText(shown.join('\n'));
   }
 
-  update() { this.tickHud(); }
+  update(t) {
+    this.tickHud();
+    if (!this.t0 || this.done) return this.bufT.setText('');
+    const spin = SPIN[Math.floor(t / 130) % SPIN.length];
+    if (this.queue.length) this.bufT.setText(`KEYS WAITING FOR CPU: ${this.queue.join(' ')}  ${spin}`);
+    else if (this.busy && !this.disk) this.bufT.setText(`CPU BUSY, PLEASE WAIT ${spin}`);
+    else this.bufT.setText('');
+  }
 
   finish() {
     this.done = true;

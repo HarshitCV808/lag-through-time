@@ -1,4 +1,5 @@
-export const DPR = Math.min(window.devicePixelRatio || 1, 2);
+// Full screen pixel density (iPhones are 3x). Capped at 3 to keep canvas size sane.
+export const DPR = Math.min(window.devicePixelRatio || 1, 3);
 
 export const THEMES = {
   dos: {

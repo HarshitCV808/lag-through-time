@@ -64,23 +64,34 @@ export const PERMISSIONS = [
   { text: 'Share your face data with partners', ok: false, note: 'Leaked! Your face is now in someone’s dataset.' },
 ];
 
-export const ENGINES = [
-  { id: 'CPU', desc: 'Quick, light tasks', tops: 'Instant response' },
-  { id: 'GPU', desc: 'Heavy creative and gaming AI', tops: 'Up to 120 TOPS' },
-  { id: 'NPU', desc: 'All-day, low-power AI', tops: 'Up to 50 TOPS' },
-];
-
-export const TASKS = [
-  { text: 'Blur my background on a video call', engine: 'NPU', why: 'Background blur runs for hours, so it goes on the low-power NPU.' },
-  { text: 'More FPS with AI upscaling', engine: 'GPU', why: 'XeSS upscaling runs on the Arc GPU, right where the game is drawn.' },
-  { text: 'Autocorrect while I type', engine: 'CPU', why: 'Tiny, instant jobs are quickest on the CPU.' },
-  { text: 'Live captions for my lecture', engine: 'NPU', why: 'Captions run all class long. The NPU does it on very little power.' },
-  { text: 'Erase the background from a photo', engine: 'GPU', why: 'Heavy image AI is fastest on the Arc GPU.' },
-  { text: 'Remove noise from my mic', engine: 'NPU', why: 'Always-on audio clean-up belongs on the NPU to save battery.' },
-  { text: 'Generate an image from a prompt', engine: 'GPU', why: 'Image generation needs lots of parallel maths, the GPU speciality.' },
-  { text: 'Keep eye contact on calls', engine: 'NPU', why: 'Eye-contact correction runs the whole call, so the low-power NPU handles it.' },
-  { text: 'Add AI effects to a 4K video', engine: 'GPU', why: 'Video effects crunch millions of pixels, a GPU job.' },
-  { text: 'Open apps in a snap', engine: 'CPU', why: 'Snappy everyday jobs are the CPU’s home turf.' },
+// Level 4: a Gen-Z day on an Intel AI PC, one 4-second microgame per moment.
+// engine = which part of the chip does it; kept to well-known, checkable examples.
+export const MOMENTS = [
+  {
+    id: 'lecture', clock: '8:00 AM', place: 'Lecture', useCase: 'Learning',
+    verb: 'TAP', instruction: 'Tap CC for live captions', engine: 'NPU',
+    done: 'Live captions, running on the NPU with Wi-Fi off',
+  },
+  {
+    id: 'call', clock: '11:00 AM', place: 'Video call', useCase: 'Work',
+    verb: 'SWIPE', instruction: 'Swipe to blur your messy room', engine: 'NPU',
+    done: 'Background blur on the NPU, all call long, barely touching the battery',
+  },
+  {
+    id: 'reel', clock: '4:00 PM', place: 'Reel edit', useCase: 'Creativity',
+    verb: 'TAP', instruction: 'Tap yourself to cut out the background', engine: 'GPU',
+    done: 'Background removed by Intel Arc graphics, right on your laptop',
+  },
+  {
+    id: 'game', clock: '9:00 PM', place: 'Gaming', useCase: 'Gaming',
+    verb: 'HOLD', instruction: 'Hold BOOST to switch on AI upscaling', engine: 'GPU',
+    done: 'XeSS AI upscaling on Arc graphics: smoother frames',
+  },
+  {
+    id: 'notes', clock: '11:30 PM', place: 'Exam night', useCase: 'Everyday',
+    verb: 'MASH', instruction: 'Mash to summarise 40 pages, offline', engine: 'NPU',
+    done: 'Notes summarised on-device. No Wi-Fi, nothing uploaded',
+  },
 ];
 
 export const PERSONAS = {

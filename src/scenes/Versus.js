@@ -2,7 +2,7 @@ import Base from './Base.js';
 import { THEMES, hex } from '../theme.js';
 import { Button } from '../ui.js';
 import { music } from '../audio.js';
-import { BUDGETS, TASKS } from '../data.js';
+import { BUDGETS } from '../data.js';
 
 const ROWS = [
   { key: 'L1', year: '1981', name: 'First PC', pain: 'Text only. One task at a time.', th: THEMES.dos },
@@ -79,7 +79,7 @@ export default class Versus extends Base {
         g.fillStyle(hex(r.th.name === 'y2k' ? '#c9c6bd' : r.th.name === 'cloud' ? '#2f6fed' : r.th.accent)).fillCircle(-cw / 2 + s(6), y + s(12), s(6));
         text(-cw / 2 + s(22), y, `${r.year}  ${r.name}`, 17, { weight: '700', color: last ? th.accent : th.ink, wrap: cw - s(110) });
         const t = times[r.key];
-        if (t) text(cw / 2, y, last ? `${t}s, ${TASKS.length} tasks` : `${t}s`, 15, { weight: '700', color: th.dim, ox: 1 });
+        if (t) text(cw / 2, y, last ? `${t}s, full AI day` : `${t}s`, 15, { weight: '700', color: th.dim, ox: 1 });
         text(-cw / 2 + s(22), y + s(26), r.pain, 14, { color: th.dim, wrap: cw - s(22) });
         y += rh + (last ? s(10) : 0);
       });

@@ -12,10 +12,10 @@ Each level opens with a quick **multi-select question** about the shopper, such 
 
 | Level | Era | Mini-game | What it teaches |
 |---|---|---|---|
-| 1 | 1981, first PC | Type `DIR`, `RUN`, `PRINT` on a laggy green-screen terminal and swap the floppy disk | One task at a time, text only |
+| 1 | 1981, first PC | Type `DIR`, `RUN`, `PRINT` on a green-screen terminal where every key takes almost a second to appear (a "KEYS WAITING FOR CPU" buffer and busy spinner show the lag), then swap the floppy disk | One task at a time, text only, slow |
 | 2 | 2003, Battery Dash | Endless-runner: a little laptop runs to class, jumps coffee cups and bags, and grabs plug points before the battery dies | Short battery life, chained to the charger |
 | 3 | 2015, Swipe the permissions | Dating-app style swipes: cloud AI keeps asking for your data (contacts, location, face data…). Swipe left to deny, right to allow, while Wi-Fi drops freeze everything | Cloud AI needs internet, and your data leaves the laptop |
-| 4 | 2026, AI Rush | 10 everyday AI tasks fall down three lanes (CPU, GPU, NPU). Drag a card, tap a lane or press 1/2/3 to steer it into the right engine before it lands, while a "cheap cloud laptop" races you across the top and stalls on buffering | On-device AI: instant, offline, private, battery-friendly, and visibly ahead of a cloud-only laptop |
+| 4 | 2026, AI Day | Five 4-second microgames across a Gen-Z day: 8 AM lecture (tap CC for live captions), 11 AM video call (swipe to blur a messy room), 4 PM reel edit (tap yourself to cut out the background), 9 PM gaming (hold BOOST for XeSS upscaling), 11:30 PM exam night (mash to summarise notes offline) | On-device AI across learning, work, creativity, gaming and everyday life: instant, offline, private, battery-friendly |
 
 After the levels:
 
@@ -32,7 +32,7 @@ If nobody touches the screen for 90 seconds, the game goes back to the title for
 
 ## Made for the store floor
 
-- **Crisp text everywhere.** Text is drawn at device resolution on whole pixels with whole-pixel font sizes, and the Silkscreen pixel font snaps to its 8px grid. Screens that don't fit are laid out again with smaller type, never shrunk.
+- **Crisp text everywhere.** The canvas renders at the screen's full pixel density (up to 3x) and is pinned to the viewport so fractional densities never blur it. Text is drawn on whole pixels with whole-pixel font sizes, and the Silkscreen pixel font snaps to its 8px grid. Screens that don't fit are laid out again with smaller type, never shrunk.
 - **Works anywhere.** Runs in the browser on the store's demo laptop or a shopper's phone, in portrait or landscape, and reflows if the screen rotates mid-level.
 - **Zero tech knowledge needed.** Big tap targets, keyboard shortcuts (Enter, number keys, letters), and no jargon without a plain-word explanation.
 - **Sound.** On by default, made with Web Audio so there are no files to load. It starts on the first tap, as browsers require, and the speaker button mutes it at any time.
@@ -42,10 +42,10 @@ If nobody touches the screen for 90 seconds, the game goes back to the title for
 
 | Criterion | In the game |
 |---|---|
-| Creativity (3) | Four eras, each with its own visual style and its own genre: terminal, runner, swipe, falling-lanes arcade. Time-warp transitions, confetti and streaks. |
+| Creativity (3) | Four eras, each with its own visual style and its own genre: terminal, runner, swipe, microgames. Time-warp transitions, confetti and streaks. |
 | Persuasion (3) | The player feels 45 years of pain before the AI PC level fixes it. Multi-select answers and a budget feed a scored match from 10 real laptops, with a ₹ price, a runner-up and a next step. |
 | Technical accuracy (3) | Real engine roles: NPU for always-on effects, GPU for XeSS and image AI, CPU for quick tasks. Real TOPS figures, with platform caveats. |
-| Competitive superiority (1) | Level 4 races a cloud-only laptop live. The comparison page covers the cheap non-AI laptop, ARM/Snapdragon emulation and macOS compatibility, with factual lines only. |
+| Competitive superiority (1) | Level 3 shows what cloud-only AI costs you; the comparison page covers the cheap non-AI laptop, ARM/Snapdragon emulation and macOS compatibility, with factual lines only. |
 
 ## Facts and sources
 

@@ -1,20 +1,18 @@
 import Phaser from 'phaser';
 import Base from './Base.js';
-import { THEMES, ENGINE_COLORS, hex } from '../theme.js';
+import { THEMES, ENGINE_COLORS } from '../theme.js';
 import { drawCard, confetti } from '../ui.js';
 import { music, sfx } from '../audio.js';
-import { TASKS, ENGINES } from '../data.js';
+import { MOMENTS } from '../data.js';
 
-// AI Rush: tasks fall down three lanes (CPU, GPU, NPU). Drag a card sideways, tap a lane,
-// or press 1/2/3 to steer the lowest card before it lands. A cheap cloud laptop races you
-// across the top and never gets past "Uploading…".
-// Fall time in seconds for a card to cross the lanes, so the pace is the same on every
-// screen size. Starts at 4 s and speeds up after every landed task.
-const FALL_START_S = 4;
-const FALL_STEP_S = 0.18;
-const FALL_MIN_S = 2.2;
-const RIVAL_PER_S = 2.6;
-const RIVAL_CAP = 85;
+// AI Day: five 4-second microgames across a Gen-Z day on an Intel AI PC
+// (learning, work, creativity, gaming, everyday). Everything is drawn each frame from the
+// current screen size, so rotating the phone mid-game just reflows.
+const PLAY_S = 4.5;
+const INTRO_S = 1.1;
+const RESULT_S = 1.9;
+const MASH_NEED = 8;
+const HOLD_S = 1.2;
 
 export default class Level4AIPC extends Base {
   constructor() { super('L4'); }
@@ -22,245 +20,388 @@ export default class Level4AIPC extends Base {
   build() {
     this.th = THEMES.ai;
     music('ai');
-    Object.assign(this, { running: false, cards: [], spawned: 0, landed: 0, correct: 0, streak: 0, best: 0, batt: 100, rival: 0, stall: 0, clock: 0 });
-    this.tasks = Phaser.Utils.Array.Shuffle([...TASKS]);
+    Object.assign(this, { mi: -1, phase: 'idle', timer: 0, wins: 0, batt: 100, mg: null, clock: 0 });
     this.makeHud('Level 4 of 4   2026');
     this.g = this.add.graphics();
-    const st = (color, weight = '700') => ({ fontFamily: 'Manrope', fontStyle: weight, color });
-    this.youT = this.add.text(0, 0, '', st(this.th.ink));
-    this.rivalT = this.add.text(0, 0, '', st(this.th.dim, '500'));
-    this.hintT = this.add.text(0, 0, '', { ...st('#ffd9e8'), align: 'center', stroke: '#060d2b', strokeThickness: 6 }).setOrigin(0.5, 1).setDepth(20);
-    this.docks = ENGINES.map((e, i) => this.makeDock(e, i));
+    const st = (font, weight, color) => ({ fontFamily: font, fontStyle: weight, color });
+    this.clockT = this.add.text(0, 0, '', st('Unbounded', '800', this.th.ink));
+    this.placeT = this.add.text(0, 0, '', st('Manrope', '700', this.th.dim));
+    this.instrT = this.add.text(0, 0, '', { ...st('Unbounded', '800', this.th.accent), align: 'center' }).setOrigin(0.5, 0);
+    this.statusT = this.add.text(0, 0, '', st('Manrope', '700', this.th.dim)).setOrigin(0.5, 0);
+    this.stampT = this.add.text(0, 0, '', { ...st('Manrope', '800', '#ffffff'), align: 'center', stroke: '#060d2b', strokeThickness: 8 }).setOrigin(0.5).setDepth(20);
+    // Reusable in-stage labels (each microgame uses some of them).
+    this.la = this.add.text(0, 0, '', st('Manrope', '700', '#ffffff')).setOrigin(0.5).setDepth(5);
+    this.lb = this.add.text(0, 0, '', st('Unbounded', '800', '#04102e')).setOrigin(0.5).setDepth(5);
+    this.lc = this.add.text(0, 0, '', { ...st('Manrope', '700', '#ffffff'), align: 'center' }).setOrigin(0.5).setDepth(5);
+    this.input.on('pointerdown', (p) => this.down(p));
+    this.input.on('pointermove', (p) => this.move(p));
+    this.input.on('pointerup', () => this.up());
+    this.input.keyboard.on('keyup', () => this.up());
     this.ask({
       kicker: 'Level 4 of 4',
-      title: '2026: AI Rush',
-      body: 'Intel Core Ultra has three AI engines: the CPU for quick jobs, the GPU for graphics-heavy AI, and the NPU, a mini AI brain that sips battery. Tasks are falling: drag or tap each into the right engine before it lands. A cheap cloud laptop is racing you.',
+      title: '2026: AI Day',
+      body: 'One day with an Intel AI PC, from 8 AM lecture to late-night exam prep. Five quick moments: tap, swipe, hold or mash fast. Every one runs on the laptop itself, even with Wi-Fi off.',
       buttons: [{ label: 'Next', onClick: () => this.askMulti('L4', 'Quick question', () => this.start()) }],
     });
   }
 
   start() {
-    this.running = true;
     this.t0 = this.time.now;
-    this.spawn();
-    this.say('Drag the card, or tap the right engine below', '#ffffff');
+    this.startMoment(0);
   }
 
-  makeDock(e, i) {
-    const d = this.add.container(0, 0).setDepth(5);
-    d.engine = e;
-    d.idx = i;
-    d.g = this.add.graphics();
-    const col = ENGINE_COLORS[e.id];
-    d.name = this.add.text(0, 0, e.id, { fontFamily: 'Unbounded', fontStyle: '800', color: col }).setOrigin(0.5, 0);
-    d.desc = this.add.text(0, 0, e.desc, { fontFamily: 'Manrope', fontStyle: '700', color: this.th.ink, align: 'center' }).setOrigin(0.5, 0);
-    d.tops = this.add.text(0, 0, e.tops, { fontFamily: 'Manrope', fontStyle: '500', color: this.th.dim, align: 'center' }).setOrigin(0.5, 1);
-    d.add([d.g, d.name, d.desc, d.tops]);
-    d.setSize(10, 10).setInteractive({ useHandCursor: true });
-    d.on('pointerup', () => this.steer(this.target(), i));
-    return d;
-  }
+  get m() { return MOMENTS[this.mi]; }
 
-  drawDock(d, lit = 0, bad = false) {
-    const s = (n) => this.s(n);
-    const { bw: w, bh: h } = d;
-    const col = bad ? 0xe5383b : hex(ENGINE_COLORS[d.engine.id]);
-    d.g.clear();
-    d.g.fillStyle(col, 0.12 + lit * 0.35).fillRoundedRect(-w / 2, -h / 2, w, h, s(18));
-    d.g.lineStyle(s(2), col, 0.6 + lit * 0.4).strokeRoundedRect(-w / 2, -h / 2, w, h, s(18));
-  }
-
-  laneX(i) { return this.lanes.x0 + this.lanes.w / 2 + i * (this.lanes.w + this.lanes.gap); }
-
-  // The card the player is steering: the lowest one still falling.
-  target() {
-    return this.cards.reduce((a, c) => (!a || c.y > a.y ? c : a), null);
-  }
-
-  steer(c, lane) {
-    if (!c || !this.running || lane < 0 || lane > 2) return;
-    c.lane = lane;
-    sfx('key');
-    this.tweens.add({ targets: c, x: this.laneX(lane), duration: 110, ease: 'Quad.Out' });
-    this.drawTaskCard(c);
-  }
-
-  onKey(e) {
-    const t = this.target();
-    const i = ['1', '2', '3'].indexOf(e.key);
-    if (i >= 0) this.steer(t, i);
-    if (t && e.key === 'ArrowLeft') this.steer(t, t.lane - 1);
-    if (t && e.key === 'ArrowRight') this.steer(t, t.lane + 1);
-  }
-
-  spawn() {
-    const task = this.tasks[this.spawned++];
-    if (!task) return;
-    const c = this.add.container(0, 0).setDepth(10);
-    c.task = task;
-    c.lane = Phaser.Math.Between(0, 2);
-    c.g = this.add.graphics();
-    c.t = this.add.text(0, 0, task.text, { fontFamily: 'Manrope', fontStyle: '700', color: this.th.ink, align: 'center', wordWrap: { width: 4000, useAdvancedWrap: true } }).setOrigin(0.5);
-    c.add([c.g, c.t]);
-    c.setSize(10, 10).setInteractive({ draggable: true, useHandCursor: true });
-    c.on('drag', (_, x) => { c.x = Phaser.Math.Clamp(x, this.laneX(0), this.laneX(2)); });
-    c.on('dragend', () => {
-      const lane = [0, 1, 2].reduce((a, i) => (Math.abs(this.laneX(i) - c.x) < Math.abs(this.laneX(a) - c.x) ? i : a), 0);
-      this.steer(c, lane);
-    });
-    this.cards.push(c);
-    this.sizeTaskCard(c);
-    c.setPosition(this.laneX(c.lane), this.playTop + c.ch / 2);
-    c.setScale(0.6).setAlpha(0);
-    this.tweens.add({ targets: c, scale: 1, alpha: 1, duration: 200, ease: 'Back.Out' });
-  }
-
-  sizeTaskCard(c) {
-    const s = (n) => this.s(n);
-    const w = this.lanes.w - s(8);
-    c.t.setFontSize(s(this.lanes.w < s(150) ? 13 : 15)).setWordWrapWidth(w - s(16), true);
-    c.cw = w;
-    c.ch = Math.max(s(64), c.t.height + s(24));
-    c.setSize(w, c.ch);
-    c.input.hitArea.setTo(0, 0, w, c.ch);
-    this.drawTaskCard(c);
-  }
-
-  drawTaskCard(c) {
-    const s = (n) => this.s(n);
-    const col = hex(ENGINE_COLORS[ENGINES[c.lane].id]);
-    c.g.clear();
-    drawCard(c.g, this.th, -c.cw / 2, -c.ch / 2, c.cw, c.ch, s);
-    c.g.lineStyle(s(2.5), col, 1).strokeRoundedRect(-c.cw / 2, -c.ch / 2, c.cw, c.ch, s(22));
-  }
-
-  land(c) {
-    this.cards = this.cards.filter((x) => x !== c);
-    this.landed++;
-    const d = this.docks[c.lane];
-    const engine = ENGINES[c.lane].id;
-    c.disableInteractive();
-    this.tweens.add({ targets: c, y: d.y, scale: 0.3, alpha: 0, duration: 220, ease: 'Quad.In', onComplete: () => c.destroy() });
-    if (engine === c.task.engine) {
-      this.correct++;
-      this.streak++;
-      this.best = Math.max(this.best, this.streak);
-      this.batt -= 0.3;
-      sfx('ok');
-      confetti(this, d.x, d.y - d.bh / 2, [ENGINE_COLORS[engine], '#ffffff'], 16 + this.streak * 4, 0.7);
-      this.drawDock(d, 1);
-      this.tweens.add({ targets: d, scale: { from: 1.08, to: 1 }, duration: 260, ease: 'Back.Out' });
-      this.say(this.streak > 1 ? `Done on-device by the ${engine}. Streak x${this.streak}!` : `Done on-device by the ${engine}`, ENGINE_COLORS[engine]);
-    } else {
-      this.streak = 0;
-      sfx('no');
-      this.cameras.main.shake(140, 0.005);
-      this.drawDock(d, 0.5, true);
-      this.say(`Wrong engine. ${c.task.why}`, '#ffd9e8');
+  startMoment(i) {
+    this.mi = i;
+    this.phase = 'intro';
+    this.timer = INTRO_S;
+    this.mg = {
+      lecture: { rx: Phaser.Math.FloatBetween(0.25, 0.8), ry: Phaser.Math.FloatBetween(0.45, 0.75) },
+      call: { blur: 0, last: null },
+      reel: { px: Phaser.Math.FloatBetween(0.3, 0.7), cut: 0 },
+      game: { boost: 0, holding: false, scroll: 0, acc: 0 },
+      notes: { taps: 0 },
+    }[this.m.id];
+    this.stampT.setText('');
+    sfx('pop');
+    if (!this.reduced) {
+      this.clockT.setAlpha(0);
+      this.tweens.add({ targets: this.clockT, alpha: 1, duration: 250 });
+      this.instrT.setScale(1.25);
+      this.tweens.add({ targets: this.instrT, scale: 1, duration: 300, ease: 'Back.Out' });
     }
-    this.time.delayedCall(320, () => d.active && this.drawDock(d));
-    if (this.landed >= this.tasks.length) this.time.delayedCall(350, () => this.finish());
   }
 
-  say(text, color) {
-    this.hintT.setText(text).setColor(color).setAlpha(1);
-    this.tweens.killTweensOf(this.hintT);
-    this.tweens.add({ targets: this.hintT, alpha: 0, delay: 2200, duration: 400 });
+  // ---- input -------------------------------------------------------------------------
+  inStage(p) {
+    const R = this.R;
+    return p.x >= R.x && p.x <= R.x + R.w && p.y >= R.y && p.y <= R.y + R.h;
+  }
+
+  down(p) {
+    if (this.phase !== 'play' || this.overlay) return;
+    const { mg, R } = this;
+    const id = this.m.id;
+    if (id === 'lecture') {
+      const b = this.ccBox();
+      if (p.x > b.x && p.x < b.x + b.w && p.y > b.y && p.y < b.y + b.h) this.win();
+      else this.nudge();
+    } else if (id === 'call' && this.inStage(p)) {
+      mg.last = { x: p.x, y: p.y };
+    } else if (id === 'reel' && this.inStage(p)) {
+      const px = R.x + mg.px * R.w;
+      const hit = Math.abs(p.x - px) < this.s(50) && p.y > R.y + R.h * 0.3;
+      if (hit) this.win(); else this.nudge();
+    } else if (id === 'game' && this.inStage(p)) {
+      mg.holding = true;
+    } else if (id === 'notes' && this.inStage(p)) {
+      this.mash();
+    }
+  }
+
+  move(p) {
+    if (this.phase !== 'play' || !p.isDown || this.m.id !== 'call') return;
+    const mg = this.mg;
+    if (!mg.last) return;
+    mg.blur = Math.min(1, mg.blur + (Math.abs(p.x - mg.last.x) + Math.abs(p.y - mg.last.y)) / (this.R.w * 1.6));
+    mg.last = { x: p.x, y: p.y };
+    if (mg.blur >= 1) this.win();
+  }
+
+  up() {
+    if (this.mg) { this.mg.holding = false; this.mg.last = null; }
+  }
+
+  // Keyboard: any key is the action (tap, mash, hold; repeated presses swipe).
+  onKey(e) {
+    if (this.phase !== 'play') return;
+    const id = this.m.id;
+    if (id === 'lecture' || id === 'reel') this.win();
+    else if (id === 'call') { this.mg.blur += 0.25; if (this.mg.blur >= 1) this.win(); }
+    else if (id === 'game') this.mg.holding = true;
+    else if (id === 'notes' && !e.repeat) this.mash();
+  }
+
+  mash() {
+    this.mg.taps++;
+    sfx('key');
+    this.cameras.main.shake(60, 0.002);
+    if (this.mg.taps >= MASH_NEED) this.win();
+  }
+
+  nudge() {
+    sfx('no');
+    this.cameras.main.shake(100, 0.004);
+  }
+
+  // ---- flow --------------------------------------------------------------------------
+  settle() {
+    // Show the finished effect whether the player made it or not.
+    const mg = this.mg;
+    if (this.m.id === 'call') mg.blur = 1;
+    if (this.m.id === 'game') mg.boost = 1;
+    if (this.m.id === 'notes') mg.taps = MASH_NEED;
+  }
+
+  win() {
+    if (this.phase !== 'play') return;
+    this.phase = 'result';
+    this.timer = RESULT_S;
+    this.wins++;
+    this.batt -= 6;
+    sfx('ok');
+    const col = ENGINE_COLORS[this.m.engine];
+    this.stampT.setText(this.m.done).setColor(col);
+    confetti(this, this.W / 2, this.R.y + this.R.h / 2, [col, '#ffffff', '#00c7fd'], 40);
+    if (this.m.id === 'reel') this.tweens.add({ targets: this.mg, cut: 1, duration: 400 });
+    this.settle();
+    if (!this.reduced) {
+      this.stampT.setScale(0.6);
+      this.tweens.add({ targets: this.stampT, scale: 1, duration: 260, ease: 'Back.Out' });
+    }
+  }
+
+  lose() {
+    this.phase = 'result';
+    this.timer = RESULT_S + 0.3;
+    this.batt -= 6;
+    sfx('no');
+    this.stampT.setText(`Too slow! ${this.m.done}`).setColor('#ffd9e8');
+    if (this.m.id === 'reel') this.mg.cut = 1;
+    this.settle();
   }
 
   update(_, dtMs) {
     this.tickHud();
     const dt = Math.min(dtMs, 50) / 1000;
-    if (this.running) {
-      this.clock += dt;
-      // The rival keeps stalling on its connection and never finishes.
-      this.stall -= dt;
-      if (this.stall < -2.4) this.stall = 1.2;
-      if (this.stall <= 0) this.rival = Math.min(RIVAL_CAP, this.rival + RIVAL_PER_S * dt);
-      const fallS = Math.max(FALL_MIN_S, FALL_START_S - FALL_STEP_S * this.landed);
-      const speed = (this.dockTop - this.playTop) / fallS;
-      for (const c of [...this.cards]) {
-        c.y += speed * dt;
-        if (c.y + c.ch / 2 >= this.dockTop) this.land(c);
+    this.clock += dt;
+    if (this.phase === 'intro') {
+      this.timer -= dt;
+      if (this.timer <= 0) { this.phase = 'play'; this.timer = PLAY_S; }
+    } else if (this.phase === 'play') {
+      this.timer -= dt;
+      const mg = this.mg;
+      if (this.m.id === 'game') {
+        mg.boost = Phaser.Math.Clamp(mg.boost + (mg.holding ? dt / HOLD_S : -dt * 0.5), 0, 1);
+        if (mg.boost >= 1) this.win();
       }
-      // Next card once the last one is halfway down (at most two falling at once).
-      const last = this.cards[this.cards.length - 1];
-      const half = this.playTop + (this.dockTop - this.playTop) * 0.58;
-      if (this.spawned < this.tasks.length && (!last || (last.y > half && this.cards.length < 2))) this.spawn();
+      if (this.phase === 'play' && this.timer <= 0) this.lose();
+    } else if (this.phase === 'result') {
+      this.timer -= dt;
+      if (this.timer <= 0) {
+        if (this.mi + 1 < MOMENTS.length) this.startMoment(this.mi + 1);
+        else this.finish();
+      }
     }
-    this.draw();
+    this.draw(dt);
   }
 
+  // ---- layout + drawing ----------------------------------------------------------------
   layout() {
     const s = (n) => this.s(n);
     const pad = s(18);
     const y = this.layoutHud();
+    const cw = Math.min(this.W - pad * 2, s(560));
+    const x0 = (this.W - cw) / 2;
     const tight = this.H / this.k < 470; // short landscape phones
-    this.race = { y, h: s(30) };
-    this.youT.setPosition(pad, y).setFontSize(s(13));
-    this.rivalT.setPosition(pad, y + this.race.h + s(6)).setFontSize(s(13));
-    const gap = s(10);
-    const laneW = Math.min((this.W - pad * 2 - gap * 2) / 3, s(220));
-    this.lanes = { x0: (this.W - (laneW * 3 + gap * 2)) / 2, w: laneW, gap };
-    const dockH = s(tight ? 86 : 124);
-    this.dockTop = this.H - pad - dockH;
-    this.playTop = y + this.race.h * 2 + s(22);
-    this.hintT.setPosition(this.W / 2, this.dockTop - s(10)).setFontSize(s(14)).setWordWrapWidth(Math.min(this.W - pad * 2, s(520)), true);
-    this.docks.forEach((d, i) => {
-      d.bw = laneW;
-      d.bh = dockH;
-      d.setPosition(this.laneX(i), this.dockTop + dockH / 2);
-      d.setSize(laneW, dockH);
-      d.input.hitArea.setTo(0, 0, laneW, dockH);
-      d.name.setFontSize(s(tight ? 17 : 21)).setY(-dockH / 2 + s(tight ? 8 : 14));
-      d.desc.setFontSize(s(12)).setWordWrapWidth(laneW - s(14), true).setY(-dockH / 2 + s(tight ? 32 : 46)).setVisible(!tight);
-      d.tops.setFontSize(s(11)).setWordWrapWidth(laneW - s(10), true).setY(dockH / 2 - s(10));
-      this.drawDock(d);
-    });
-    for (const c of this.cards) {
-      this.sizeTaskCard(c);
-      c.setPosition(this.laneX(c.lane), Phaser.Math.Clamp(c.y, this.playTop + c.ch / 2, this.dockTop - c.ch / 2));
+    this.clockT.setPosition(x0, y).setFontSize(s(tight ? 22 : 30));
+    this.placeT.setPosition(x0, y + s(tight ? 30 : 42)).setFontSize(s(14));
+    const iy = y + s(tight ? 52 : 70);
+    this.instrT.setPosition(this.W / 2, iy).setFontSize(s(tight ? 16 : 18)).setWordWrapWidth(cw, true);
+    const barY = iy + s(tight ? 30 : 66); // room for a two-line instruction
+    this.bar = { x: x0, y: barY, w: cw, h: s(8) };
+    const stageTop = barY + s(16);
+    const stageBottom = this.H - pad - s(30);
+    this.R = { x: x0, y: stageTop, w: cw, h: Math.max(s(150), stageBottom - stageTop) };
+    this.statusT.setPosition(this.W / 2, this.R.y + this.R.h + s(8)).setFontSize(s(13));
+    this.stampT.setPosition(this.W / 2, this.R.y + this.R.h / 2).setFontSize(s(18)).setWordWrapWidth(cw - s(30), true);
+    this.la.setFontSize(s(15));
+    this.lc.setFontSize(s(14)).setWordWrapWidth(cw - s(40), true);
+  }
+
+  ccBox() {
+    const R = this.R;
+    const w = this.s(96);
+    const h = this.s(60);
+    const mg = this.mg;
+    return { x: R.x + mg.rx * (R.w - w), y: R.y + mg.ry * (R.h - h), w, h };
+  }
+
+  draw(dt) {
+    if (!this.R) return;
+    const s = (n) => this.s(n);
+    const g = this.g.clear();
+    const { R } = this;
+    [this.la, this.lb, this.lc].forEach((t) => t.setVisible(false));
+    const m = this.m;
+    if (!m) return;
+    this.statusT.setText(`Moment ${this.mi + 1} of ${MOMENTS.length}   Wi-Fi off   Battery ${Math.round(this.batt)}%`);
+    this.clockT.setText(m.clock);
+    this.placeT.setText(m.place === m.useCase ? m.place : `${m.place}, ${m.useCase.toLowerCase()}`);
+    this.instrT.setText(m.instruction);
+    // Timer bar: turns pink in the last third.
+    const b = this.bar;
+    const frac = this.phase === 'play' ? this.timer / PLAY_S : this.phase === 'intro' ? 1 : 0;
+    g.fillStyle(0xffffff, 0.12).fillRoundedRect(b.x, b.y, b.w, b.h, b.h / 2);
+    g.fillStyle(frac < 0.33 ? 0xff5fa2 : 0x00c7fd).fillRoundedRect(b.x, b.y, Math.max(b.h, b.w * frac), b.h, b.h / 2);
+    drawCard(g, this.th, R.x, R.y, R.w, R.h, s);
+    this.lb.setFontSize(s(20));
+    this[`draw_${m.id}`](g, s, dt);
+    if (this.phase === 'intro') {
+      // Big verb flash over the stage.
+      g.fillStyle(0x060d2b, 0.75).fillRoundedRect(R.x, R.y, R.w, R.h, s(22));
+      this.la.setVisible(false);
+      this.lc.setVisible(false);
+      this.lb.setVisible(true).setText(`${m.verb}!`).setColor('#00c7fd').setFontSize(s(48)).setPosition(this.W / 2, R.y + R.h / 2);
+    } else if (this.phase === 'result') {
+      g.fillStyle(0x060d2b, 0.6).fillRoundedRect(R.x, R.y, R.w, R.h, s(22));
+      this.lb.setVisible(false);
     }
   }
 
-  draw() {
-    if (!this.lanes) return;
-    const s = (n) => this.s(n);
-    const g = this.g.clear();
-    const pad = s(18);
-    // Lanes, tinted by engine.
-    ENGINES.forEach((e, i) => {
-      const x = this.laneX(i) - this.lanes.w / 2;
-      g.fillStyle(hex(ENGINE_COLORS[e.id]), 0.06).fillRect(x, this.playTop, this.lanes.w, this.dockTop - this.playTop);
-    });
-    // Race bars: you vs the cheap cloud laptop.
-    const total = this.tasks.length;
-    const bw = this.W - pad * 2;
-    const r = this.race;
-    const by1 = r.y + s(19);
-    const by2 = r.y + r.h + s(25);
-    g.fillStyle(0xffffff, 0.12).fillRoundedRect(pad, by1, bw, s(6), s(3)).fillRoundedRect(pad, by2, bw, s(6), s(3));
-    g.fillStyle(0x00c7fd).fillRoundedRect(pad, by1, Math.max(s(6), bw * (this.landed / total)), s(6), s(3));
-    g.fillStyle(0x8a94b8).fillRoundedRect(pad, by2, Math.max(s(6), bw * (this.rival / 100)), s(6), s(3));
-    this.youT.setText(`You, Intel AI PC: ${this.landed}/${total} done, offline, battery ${Math.round(this.batt)}%`);
-    const status = this.rival >= RIVAL_CAP ? 'still uploading…' : this.stall > 0 ? 'buffering…' : 'uploading to the cloud…';
-    this.rivalT.setText(`Cheap cloud laptop: ${Math.floor(this.rival)}%, ${status}`);
+  draw_lecture(g, s) {
+    const { R } = this;
+    // Chalkboard and lecturer.
+    g.fillStyle(0x1f3b2c).fillRect(R.x + s(16), R.y + s(16), R.w - s(32), R.h * 0.34);
+    g.lineStyle(s(2), 0xd9e8d0, 0.7);
+    for (let i = 0; i < 3; i++) g.lineBetween(R.x + s(34), R.y + s(40) + i * s(18), R.x + R.w * (0.5 + i * 0.12), R.y + s(40) + i * s(18));
+    const px = R.x + R.w * 0.16;
+    const py = R.y + R.h * 0.62;
+    g.fillStyle(0xffc145).fillCircle(px, py, s(18));
+    g.fillStyle(0x3a4a80).fillRoundedRect(px - s(22), py + s(20), s(44), s(50), s(10));
+    // Speech bubble of mumbling.
+    const bw = Math.min(s(190), R.w * 0.55);
+    const bx = px + s(30);
+    const by = R.y + R.h * 0.42;
+    g.fillStyle(0xffffff, 0.92).fillRoundedRect(bx, by, bw, s(40), s(14));
+    this.la.setVisible(true).setText('mumble mumble NPU…').setColor('#04102e').setPosition(bx + bw / 2, by + s(20));
+    if (this.phase !== 'result') {
+      const b = this.ccBox();
+      const pulse = 1 + Math.sin(this.clock * 8) * 0.06;
+      const cx = b.x + b.w / 2;
+      const cy = b.y + b.h / 2;
+      g.fillStyle(0x00c7fd, 0.25).fillRoundedRect(cx - (b.w / 2) * pulse * 1.15, cy - (b.h / 2) * pulse * 1.2, b.w * pulse * 1.15, b.h * pulse * 1.2, s(16));
+      g.fillStyle(0x00c7fd).fillRoundedRect(b.x, b.y, b.w, b.h, s(12));
+      this.lb.setVisible(true).setText('CC').setColor('#04102e').setPosition(cx, cy);
+    } else {
+      g.fillStyle(0x000000, 0.85).fillRect(R.x + s(16), R.y + R.h - s(64), R.w - s(32), s(48));
+      this.lc.setVisible(true).setText('“NPUs run AI on very little power.”').setPosition(this.W / 2, R.y + R.h - s(40));
+    }
+  }
+
+  draw_call(g, s) {
+    const { R, mg } = this;
+    // Messy room: posters, a shelf, a laundry pile.
+    g.fillStyle(0x6b4f8a).fillRect(R.x + s(10), R.y + s(10), R.w - s(20), R.h - s(20));
+    g.fillStyle(0xffc145).fillRect(R.x + R.w * 0.08, R.y + R.h * 0.12, R.w * 0.18, R.h * 0.26);
+    g.fillStyle(0xff5fa2).fillRect(R.x + R.w * 0.72, R.y + R.h * 0.1, R.w * 0.16, R.h * 0.22);
+    g.fillStyle(0x2ef2c8).fillRect(R.x + R.w * 0.76, R.y + R.h * 0.4, R.w * 0.08, R.h * 0.3);
+    [[0.12, 0.85, 26], [0.2, 0.82, 20], [0.85, 0.86, 24], [0.78, 0.88, 18]].forEach(([fx, fy, r]) => g.fillStyle(0xe5e7ef).fillCircle(R.x + R.w * fx, R.y + R.h * fy, s(r)));
+    // Blur: a frosted wash over the room that thickens as you swipe.
+    if (mg.blur > 0) g.fillStyle(0x9fb0d9, 0.92 * mg.blur).fillRect(R.x + s(10), R.y + s(10), R.w - s(20), R.h - s(20));
+    // You, always sharp.
+    const cx = R.x + R.w / 2;
+    const cy = R.y + R.h * 0.5;
+    g.fillStyle(0x2b2b5a).fillRoundedRect(cx - s(60), cy + s(36), s(120), R.h * 0.5 - s(46), s(30));
+    g.fillStyle(0xffc145).fillCircle(cx, cy, s(40));
+    g.fillStyle(0x04102e).fillCircle(cx - s(14), cy - s(6), s(4)).fillCircle(cx + s(14), cy - s(6), s(4));
+    if (this.phase === 'play' && mg.blur < 0.3) {
+      this.la.setVisible(true).setText('<<  swipe across  >>').setColor('#ffffff').setPosition(cx, R.y + s(34));
+    }
+  }
+
+  draw_reel(g, s) {
+    const { R, mg } = this;
+    const cut = mg.cut;
+    // Busy city photo behind you; becomes a clean cut-out backdrop.
+    g.fillStyle(0x7fc8ff).fillRect(R.x + s(10), R.y + s(10), R.w - s(20), R.h * 0.55);
+    g.fillStyle(0xffe066).fillCircle(R.x + R.w * 0.82, R.y + R.h * 0.2, s(26));
+    [0.05, 0.22, 0.6, 0.78].forEach((f, i) => g.fillStyle(i % 2 ? 0x3a4a80 : 0x56628f).fillRect(R.x + R.w * f, R.y + R.h * (0.25 + i * 0.05), R.w * 0.14, R.h * 0.75 - R.h * (0.25 + i * 0.05) + R.h * 0.2));
+    g.fillStyle(0x4a7a3a).fillRect(R.x + s(10), R.y + R.h * 0.8, R.w - s(20), R.h * 0.2 - s(10));
+    if (cut > 0) {
+      const sq = s(18);
+      const x1 = R.x + R.w - s(10);
+      const y1 = R.y + R.h - s(10);
+      for (let x = R.x + s(10); x < x1; x += sq) {
+        for (let y = R.y + s(10); y < y1; y += sq) {
+          const odd = (Math.round((x - R.x) / sq) + Math.round((y - R.y) / sq)) % 2;
+          g.fillStyle(odd ? 0xffffff : 0xdfe5ee, cut).fillRect(x, y, Math.min(sq, x1 - x), Math.min(sq, y1 - y));
+        }
+      }
+    }
+    // You.
+    const px = R.x + mg.px * R.w;
+    const base = R.y + R.h - s(10);
+    g.fillStyle(0xff5fa2).fillRoundedRect(px - s(34), base - R.h * 0.4, s(68), R.h * 0.4, s(24));
+    g.fillStyle(0xffc145).fillCircle(px, base - R.h * 0.4 - s(22), s(28));
+    if (this.phase === 'play') {
+      g.lineStyle(s(3), 0x00c7fd, 0.85).strokeCircle(px, base - R.h * 0.32, s(58 + Math.sin(this.clock * 6) * 4));
+    }
+  }
+
+  draw_game(g, s, dt) {
+    const { R, mg } = this;
+    const fps = 22 + 68 * mg.boost;
+    // Choppy at low FPS: the road only moves in whole game frames.
+    if (this.phase !== 'intro') {
+      mg.acc += dt;
+      const step = 1 / fps;
+      while (mg.acc >= step) { mg.scroll += s(520) * step; mg.acc -= step; }
+    }
+    g.fillStyle(0x0b1030).fillRect(R.x + s(10), R.y + s(10), R.w - s(20), R.h - s(20));
+    const cx = R.x + R.w / 2;
+    const top = R.y + R.h * 0.2;
+    const bot = R.y + R.h - s(10);
+    g.fillStyle(0x2a2f55).fillTriangle(cx - s(16), top, cx + s(16), top, cx + R.w * 0.42, bot);
+    g.fillTriangle(cx - s(16), top, cx - R.w * 0.42, bot, cx + R.w * 0.42, bot);
+    const seg = s(70);
+    for (let d = seg - (mg.scroll % seg); d < bot - top; d += seg) {
+      const t = d / (bot - top);
+      g.fillStyle(0xffc145).fillRect(cx - s(3) - t * s(4), top + d, s(6) + t * s(8), s(14) + t * s(20));
+    }
+    g.fillStyle(0xff5fa2).fillRoundedRect(cx - s(30), bot - s(70), s(60), s(50), s(10));
+    this.la.setVisible(true).setText(`${Math.round(fps)} FPS`).setColor(fps > 60 ? '#2ef2c8' : '#ff8a8a').setPosition(R.x + s(64), R.y + s(32));
+    // Boost button that fills while held.
+    const bw = Math.min(R.w * 0.6, s(260));
+    const bh = s(54);
+    const bx = cx - bw / 2;
+    const by = R.y + R.h * 0.42;
+    g.fillStyle(0x00c7fd, 0.25).fillRoundedRect(bx, by, bw, bh, s(16));
+    g.fillStyle(0x00c7fd).fillRoundedRect(bx, by, Math.max(s(16), bw * mg.boost), bh, s(16));
+    this.lb.setVisible(true).setText(mg.boost >= 1 ? 'XeSS ON' : 'HOLD BOOST').setColor('#ffffff').setPosition(cx, by + bh / 2);
+  }
+
+  draw_notes(g, s) {
+    const { R, mg } = this;
+    g.fillStyle(0x0a0f24).fillRect(R.x + s(10), R.y + s(10), R.w - s(20), R.h - s(20));
+    // Laptop whose page fills with summary lines as you mash.
+    const lw = Math.min(R.w * 0.7, s(300));
+    const lh = R.h * 0.58;
+    const lx = R.x + (R.w - lw) / 2;
+    const ly = R.y + R.h * 0.14;
+    g.fillStyle(0x2b2f55).fillRoundedRect(lx, ly, lw, lh, s(10));
+    g.fillStyle(0xf2f6ff).fillRect(lx + s(12), ly + s(12), lw - s(24), lh - s(24));
+    const lines = Math.min(Math.floor((lh - s(40)) / s(16)), Math.round((mg.taps / MASH_NEED) * 7));
+    for (let i = 0; i < lines; i++) g.fillStyle(i === 0 ? 0x00c7fd : 0x9fb0d9).fillRect(lx + s(22), ly + s(24) + i * s(16), (lw - s(44)) * (i === 0 ? 0.5 : 0.65 + (i % 3) * 0.1), s(7));
+    g.fillStyle(0x3a4a80).fillRect(lx - s(14), ly + lh, lw + s(28), s(10));
+    this.la.setVisible(true).setText('Wi-Fi off, AI still on').setColor('#2ef2c8').setPosition(this.W / 2, R.y + R.h - s(24));
+    if (this.phase === 'play') this.lc.setVisible(true).setText(`${mg.taps}/${MASH_NEED}`).setPosition(R.x + R.w - s(40), R.y + s(28));
   }
 
   finish() {
     if (this.done) return;
-    this.running = false;
+    this.phase = 'done';
     this.done = true;
     const sec = this.secs();
     this.record('L4', sec);
     this.hudT.setText(`${sec}s`);
     sfx('win');
     this.party();
-    const rival = Math.floor(this.rival);
     this.time.delayedCall(500, () => this.ask({
-      kicker: `${this.correct}/${this.tasks.length} right in ${sec}s, best streak x${this.best}`,
+      kicker: `${this.wins}/${MOMENTS.length} moments nailed in ${sec}s`,
       title: 'Ekdum instant.',
-      body: `All offline, battery at ${Math.round(this.batt)}%. The cheap cloud laptop? Stuck at ${rival}%, still uploading your stuff to a server.`,
+      body: `Lecture, call, reel, game and exam notes: one day, all on-device, battery still at ${Math.round(this.batt)}%. No uploads, no waiting for Wi-Fi.`,
       buttons: [{ label: 'See the upgrade', onClick: () => this.go('Versus') }],
     }));
   }
