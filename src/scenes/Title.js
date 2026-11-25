@@ -2,6 +2,7 @@ import Base from './Base.js';
 import { THEMES, hex } from '../theme.js';
 import { Button } from '../ui.js';
 import { music } from '../audio.js';
+import { LAPTOPS } from '../data.js';
 
 const ERAS = [
   { th: THEMES.dos, year: '1981' },
@@ -14,6 +15,12 @@ export default class Title extends Base {
   constructor() { super('Title'); }
 
   build() {
+    // QR / share link (?match=gamer): open straight on that match, once per page load.
+    const match = new URLSearchParams(location.search).get('match');
+    if (LAPTOPS[match] && !this.registry.get('linkUsed')) {
+      this.registry.set('linkUsed', true);
+      this.scene.start('Result', { match });
+    }
     this.registry.set('picks', []);
     this.registry.set('times', {});
     music('ai');
@@ -77,13 +84,7 @@ export default class Title extends Base {
       btn.place(-cw / 2 + bw / 2, y + s(30), bw, s(60), s(18));
       root.add(btn);
       this.overlayKeys = { Enter: () => this.go('L1'), ' ': () => this.go('L1') };
-      y += s(60) + s(28);
-      const foot = this.add.text(-cw / 2, y, 'A hackathon game about Intel AI PCs. Not an official Intel website.', {
-        fontFamily: th.body, fontStyle: '500', fontSize: s(13), color: th.dim,
-        wordWrap: { width: cw, useAdvancedWrap: true },
-      }).setAlpha(0.8);
-      root.add(foot);
-      y += foot.height;
+      y += s(60);
     }
     const sc = Math.min(1, (H - s(40)) / y);
     root.setScale(sc);

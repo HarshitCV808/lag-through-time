@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { DPR } from './theme.js';
-import { isMuted, setMuted } from './audio.js';
+import { isMuted, setMuted, unlock } from './audio.js';
 import Title from './scenes/Title.js';
 import Level1Dos from './scenes/Level1Dos.js';
 import Level2Battery from './scenes/Level2Battery.js';
@@ -22,6 +22,14 @@ const syncMute = () => {
 };
 muteBtn.addEventListener('click', () => { setMuted(!isMuted()); syncMute(); });
 syncMute();
+// First tap or key anywhere starts the audio (browser autoplay rule).
+const firstGesture = () => {
+  unlock();
+  removeEventListener('pointerdown', firstGesture, true);
+  removeEventListener('keydown', firstGesture, true);
+};
+addEventListener('pointerdown', firstGesture, true);
+addEventListener('keydown', firstGesture, true);
 
 (async () => {
   // Canvas text needs fonts loaded first; don't hang the kiosk if the network is slow.

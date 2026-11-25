@@ -10,7 +10,8 @@
     "test": "node src/persona.test.mjs"
   },
   "dependencies": {
-    "phaser": "^3.90.0"
+    "phaser": "^3.90.0",
+    "qrcode-generator": "^1.4.4"
   },
   "devDependencies": {
     "vite": "^6.3.5"

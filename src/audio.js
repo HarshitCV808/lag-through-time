@@ -1,7 +1,8 @@
-// Tiny WebAudio synth: no audio files to load. Muted until the player turns sound on.
+// Tiny WebAudio synth: no audio files to load. Sound is on by default; browsers only
+// allow audio after the first tap or key press, so unlock() runs on that first gesture.
 let ctx = null;
 let master = null;
-let muted = true;
+let muted = false;
 let era = null;
 let loop = null;
 
@@ -56,7 +57,7 @@ function stopLoop() {
 function startLoop() {
   stopLoop();
   const song = SONGS[era];
-  if (muted || !song) return;
+  if (muted || !song || !ctx) return;
   const step = 60000 / song.bpm / 2;
   let i = 0;
   loop = setInterval(() => {
@@ -66,6 +67,12 @@ function startLoop() {
 }
 
 export const isMuted = () => muted;
+
+export function unlock() {
+  ensure();
+  ctx.resume();
+  if (!loop) startLoop();
+}
 
 export function setMuted(m) {
   muted = m;

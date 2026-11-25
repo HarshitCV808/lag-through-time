@@ -2,6 +2,7 @@ import Base from './Base.js';
 import { THEMES } from '../theme.js';
 import { Button, drawCard } from '../ui.js';
 import { music, sfx } from '../audio.js';
+import qrcode from 'qrcode-generator';
 import { LAPTOPS, PERSONAS, PRICE_NOTE, topPersona } from '../data.js';
 
 const IDLE_RESET_MS = 120000; // in-store kiosk: return to the title for the next shopper
@@ -9,13 +10,45 @@ const IDLE_RESET_MS = 120000; // in-store kiosk: return to the title for the nex
 export default class Result extends Base {
   constructor() { super('Result'); }
 
-  build() {
+  build(data) {
     this.th = THEMES.ai;
     music('ai');
     sfx('win');
-    this.persona = topPersona(this.registry.get('picks') || []);
+    // Opened from the QR link on a phone: show that match, no kiosk reset.
+    this.fromLink = !!(data?.match && LAPTOPS[data.match]);
+    this.persona = this.fromLink ? data.match : topPersona(this.registry.get('picks') || []);
     this.laptop = LAPTOPS[this.persona];
-    this.idle = this.time.delayedCall(IDLE_RESET_MS, () => this.go('Title'));
+    this.link = `${location.origin}${location.pathname}?match=${this.persona}`;
+    if (!this.fromLink) this.time.delayedCall(IDLE_RESET_MS, () => this.go('Title'));
+  }
+
+  // QR code drawn as vector squares on a white tile (quiet zone included).
+  drawQr(x, y, size) {
+    const qr = qrcode(0, 'M');
+    qr.addData(this.link);
+    qr.make();
+    const n = qr.getModuleCount();
+    const cell = size / (n + 4);
+    const g = this.add.graphics();
+    g.fillStyle(0xffffff).fillRoundedRect(x, y, size, size, this.s(8));
+    g.fillStyle(0x04102e);
+    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+      if (qr.isDark(r, c)) g.fillRect(x + (c + 2) * cell, y + (r + 2) * cell, Math.ceil(cell), Math.ceil(cell));
+    }
+    return g;
+  }
+
+  async save() {
+    const data = { title: 'My Intel AI PC match', text: `${this.laptop.model}, ${this.laptop.price}`, url: this.link };
+    try {
+      if (navigator.share) return await navigator.share(data);
+      await navigator.clipboard.writeText(this.link);
+      this.ask({ title: 'Link copied', body: 'Paste it anywhere to open your laptop match later.', buttons: [{ label: 'Done', onClick: () => {} }] });
+    } catch (e) {
+      if (e?.name === 'AbortError') return; // share sheet dismissed
+      // Clipboard blocked: show the link instead.
+      this.ask({ title: 'Your match link', body: this.link, buttons: [{ label: 'Done', onClick: () => {} }] });
+    }
   }
 
   demo() {
@@ -69,16 +102,30 @@ export default class Result extends Base {
     y = cy + s(20);
 
     const gap = s(12);
-    const twoUp = cw > s(440);
-    const bw = twoUp ? (cw - gap) / 2 : cw;
-    const demo = new Button(this, th, 'Get a hands-on demo', () => this.demo());
-    const again = new Button(this, th, 'Play again', () => this.go('Title'), { ghost: true });
-    demo.place(-cw / 2 + bw / 2, y + s(28), bw, s(56), s(17));
-    if (twoUp) again.place(-cw / 2 + bw + gap + bw / 2, y + s(28), bw, s(56), s(17));
-    else again.place(0, y + s(56) + gap + s(28), bw, s(56), s(17));
-    add(demo);
-    add(again);
-    y += twoUp ? s(56) : s(56) * 2 + gap;
+    const wide = cw > s(440);
+    // Kiosk / laptop screens: QR to carry the match to your phone.
+    if (wide && !this.fromLink) {
+      const q = s(112);
+      add(this.drawQr(-cw / 2, y, q));
+      const tx = -cw / 2 + q + s(18);
+      const t1 = text(tx, y + s(14), 'Scan to save your match', 17, { weight: '700', wrap: cw - q - s(18) });
+      text(tx, y + s(20) + t1.height, 'Opens this laptop pick on your phone, to show staff or decide later.', 14, { color: th.dim, wrap: cw - q - s(18) });
+      y += q + s(20);
+    }
+    const buttons = [{ label: 'Get a hands-on demo', fn: () => this.demo() }];
+    if (!wide && !this.fromLink) buttons.push({ label: 'Save my match', fn: () => this.save(), ghost: true });
+    buttons.push({ label: this.fromLink ? 'Play the game' : 'Play again', fn: () => this.go('Title'), ghost: true });
+    const perRow = wide ? buttons.length : 1;
+    const bw = (cw - gap * (perRow - 1)) / perRow;
+    buttons.forEach((b, i) => {
+      const btn = new Button(this, th, b.label, b.fn, { ghost: b.ghost });
+      const col = i % perRow;
+      const row = Math.floor(i / perRow);
+      btn.place(-cw / 2 + bw / 2 + col * (bw + gap), y + s(28) + row * (s(56) + gap), bw, s(56), s(wide && perRow > 2 ? 15 : 17));
+      add(btn);
+    });
+    const rows = Math.ceil(buttons.length / perRow);
+    y += rows * s(56) + (rows - 1) * gap;
     this.overlayKeys = { Enter: () => this.demo() };
 
     const sc = Math.min(1, (H - s(36)) / y);

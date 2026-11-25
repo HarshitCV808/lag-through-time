@@ -21,7 +21,7 @@ export default class Level4AIPC extends Base {
     this.ask({
       kicker: 'Level 4 of 4',
       title: '2026: the Intel AI PC',
-      body: 'Intel Core Ultra has three AI engines built in: CPU, GPU and NPU. Send each task to the right engine. No internet needed.',
+      body: 'Intel Core Ultra has three AI engines: the CPU for quick jobs, the GPU for graphics-heavy AI, and the NPU, a mini AI brain that sips battery. Send each task to the right one. No internet needed.',
       buttons: [{ label: 'Wake it up', onClick: () => this.choose() }],
     });
   }
