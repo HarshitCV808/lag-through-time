@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Lag Through Time</title>
+<meta name="description" content="Play through 45 years of laptops in 3 minutes and find the Intel AI PC that never makes you wait.">
+<meta name="theme-color" content="#060d2b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@500;700;800&family=Manrope:wght@500;700&family=Silkscreen:wght@400;700&family=Unbounded:wght@600;800&family=VT323&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; background: #060d2b; overflow: hidden; overscroll-behavior: none; }
+  body { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  #game { position: fixed; inset: 0; }
+  #mute {
+    position: fixed; z-index: 2; width: 44px; height: 44px; padding: 0;
+    top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right));
+    border-radius: 50%; border: 1px solid rgba(255,255,255,.4); background: rgba(0,0,0,.4);
+    color: #fff; display: grid; place-items: center; cursor: pointer;
+  }
+  #mute:focus-visible { outline: 3px solid #00c7fd; outline-offset: 2px; }
+  #mute svg { width: 22px; height: 22px; }
+  #mute .on { display: none; }
+  #mute[aria-pressed="true"] .on { display: block; }
+  #mute[aria-pressed="true"] .off { display: none; }
+</style>
+</head>
+<body>
+<div id="game"></div>
+<button id="mute" type="button" aria-label="Sound" aria-pressed="false">
+  <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m23 9-6 6M17 9l6 6"/></svg>
+  <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14"/></svg>
+</button>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
