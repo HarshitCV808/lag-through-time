@@ -81,8 +81,8 @@ export default class Base extends Phaser.Scene {
     confetti(this, x, y, this.th.party, count);
   }
 
-  // Multi-select question for this level: toggle chips, then Continue (needs at least one).
-  askMulti(levelKey, kicker, onDone) {
+  // Level intro + multi-select question in one panel: toggle chips, then Start (needs at least one).
+  askMulti(levelKey, kicker, onDone, intro) {
     const q = QUESTIONS[levelKey];
     const picked = new Set();
     let hint = '';
@@ -108,8 +108,8 @@ export default class Base extends Phaser.Scene {
       keys.Enter = done;
       this.overlayKeys = keys;
       return panel(this, this.th, {
-        kicker, title: q.title, body: 'Pick all that apply.', buttons, hint,
-        footer: [{ label: picked.size ? `Continue with ${picked.size}` : 'Continue', onClick: done, opts: { disabled: !picked.size } }],
+        kicker, title: intro.title, body: intro.body, question: `${q.title} Pick all that apply.`, buttons, hint,
+        footer: [{ label: picked.size ? 'Start' : 'Pick at least one to start', onClick: done, opts: { disabled: !picked.size } }],
       });
     };
     this.showOverlay(build);

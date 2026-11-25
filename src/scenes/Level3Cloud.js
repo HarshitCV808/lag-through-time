@@ -31,11 +31,9 @@ export default class Level3Cloud extends Base {
     this.allow = new Button(this, this.th, 'Allow', () => this.decide(true), { fill: '#1f9d55', ink: '#ffffff' });
     this.deny.setVisible(false);
     this.allow.setVisible(false);
-    this.ask({
-      kicker: 'Level 3 of 4',
+    this.askMulti('L3', 'Level 3 of 4', () => this.start(), {
       title: '2015: Swipe the permissions',
-      body: "Your laptop can't run AI, so a cloud app does it on a far-away server, and it keeps asking for your data. Swipe right to allow, left to deny.",
-      buttons: [{ label: 'Next', onClick: () => this.askMulti('L3', 'Quick question', () => this.start()) }],
+      body: 'Cloud AI keeps asking for your data. Swipe right to allow, left to deny.',
     });
   }
 
@@ -232,7 +230,7 @@ export default class Level3Cloud extends Base {
     this.time.delayedCall(600, () => this.ask({
       kicker: `Privacy score ${this.correct}/${this.deck.length} in ${sec}s`,
       title: 'Itna wait? Seriously?',
-      body: 'Even with perfect swipes, your selfie had to leave your laptop. Cloud AI needs internet, waits in queues and keeps asking for your data.',
+      body: 'Even perfect swipes couldn’t stop your selfie leaving your laptop.',
       buttons: [{ label: 'Jump to 2026', onClick: () => this.warp('L4', THEMES.ai) }],
     }));
   }

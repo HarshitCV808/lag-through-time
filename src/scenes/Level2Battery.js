@@ -35,11 +35,9 @@ export default class Level2Battery extends Base {
     this.hint = this.add.text(0, 0, 'Tap anywhere or press Space to jump', { ...st('#ffffff', 18), align: 'center', stroke: '#0b3d40', strokeThickness: this.s(5) }).setOrigin(0.5).setAlpha(0);
     this.status = this.add.text(0, 0, '', { ...st('#ffffff', 26), fontFamily: 'Silkscreen', align: 'center' }).setOrigin(0.5).setDepth(20);
     this.input.on('pointerdown', () => this.jump());
-    this.ask({
-      kicker: 'Level 2 of 4',
+    this.askMulti('L2', 'Level 2 of 4', () => this.start(), {
       title: '2003: Battery Dash',
-      body: 'Laptops just went wireless, but batteries last 2 to 4 hours. Run to class: jump over the clutter and grab plug points before your battery dies.',
-      buttons: [{ label: 'Next', onClick: () => this.askMulti('L2', 'Quick question', () => this.start()) }],
+      body: 'Batteries last 2 to 4 hours. Tap to jump the clutter, grab plug points, reach class.',
     });
   }
 
@@ -285,7 +283,7 @@ export default class Level2Battery extends Base {
     this.time.delayedCall(600, () => this.ask({
       kicker: `Made it in ${sec}s with ${this.plugs} plug ${this.plugs === 1 ? 'point' : 'points'}`,
       title: 'Plug point life, every day',
-      body: 'Wi-Fi set laptops free in 2003, but batteries lasted 2 to 4 hours. You planned your whole day around the charger.',
+      body: 'Wi-Fi set laptops free, but you lived next to the charger.',
       buttons: [{ label: 'Jump to 2015', onClick: () => this.warp('L3', THEMES.cloud) }],
     }));
   }

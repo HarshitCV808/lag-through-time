@@ -37,11 +37,9 @@ export default class Level4AIPC extends Base {
     this.input.on('pointermove', (p) => this.move(p));
     this.input.on('pointerup', () => this.up());
     this.input.keyboard.on('keyup', () => this.up());
-    this.ask({
-      kicker: 'Level 4 of 4',
+    this.askMulti('L4', 'Level 4 of 4', () => this.start(), {
       title: '2026: AI Day',
-      body: 'One day with an Intel AI PC, from 8 AM lecture to late-night exam prep. Five quick moments: tap, swipe, hold or mash fast. Every one runs on the laptop itself, even with Wi-Fi off.',
-      buttons: [{ label: 'Next', onClick: () => this.askMulti('L4', 'Quick question', () => this.start()) }],
+      body: 'Five quick moments in one day on an Intel AI PC: tap, swipe, hold, mash. All on the laptop itself, even with Wi-Fi off.',
     });
   }
 
@@ -401,7 +399,7 @@ export default class Level4AIPC extends Base {
     this.time.delayedCall(500, () => this.ask({
       kicker: `${this.wins}/${MOMENTS.length} moments nailed in ${sec}s`,
       title: 'Ekdum instant.',
-      body: `Lecture, call, reel, game and exam notes: one day, all on-device, battery still at ${Math.round(this.batt)}%. No uploads, no waiting for Wi-Fi.`,
+      body: `A whole day, all on-device, battery still at ${Math.round(this.batt)}%. No uploads, no waiting.`,
       buttons: [{ label: 'See the upgrade', onClick: () => this.go('Versus') }],
     }));
   }

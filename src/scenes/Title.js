@@ -11,6 +11,9 @@ const ERAS = [
   { th: THEMES.ai, year: '2026' },
 ];
 
+// Readable on the navy title screen, one per era (1981, 2003, 2015).
+const FLASH_INK = ['#3dff7a', '#ffffff', '#8fb8ff'];
+
 export default class Title extends Base {
   constructor() { super('Title'); }
 
@@ -31,15 +34,26 @@ export default class Title extends Base {
     // The one orchestrated moment: the title travels through all four eras, then settles.
     this.morph = reduce ? 3 : 0;
     this.th = ERAS[this.morph].th;
+    this.flash = null;
     if (!reduce) {
       this.time.addEvent({
         delay: 420, repeat: 2,
         callback: () => { this.morph++; this.th = ERAS[this.morph].th; this.relayout(); },
       });
+      // Attract loop for the store floor: every few seconds the title flickers back
+      // through the eras so it catches the eye of people walking past.
+      this.time.addEvent({ delay: 5200, loop: true, startAt: 0, callback: () => this.attract() });
     }
   }
 
+  attract() {
+    if (this.morph !== 3 || this.leaving) return;
+    [0, 1, 2, null].forEach((era, i) => this.time.delayedCall(i * 240, () => { this.flash = era; this.relayout(); }));
+  }
+
   layout() {
+    if (this.startBtn) this.tweens.killTweensOf(this.startBtn);
+    this.startBtn = null;
     this.root?.destroy();
     const { W, H } = this;
     const s = (n) => this.s(n);
@@ -56,6 +70,10 @@ export default class Title extends Base {
     });
     root.add(title);
     y += title.height + s(22);
+    // Attract flicker: restyle the title only, measured in its settled font so nothing jumps.
+    if (this.flash !== null && settled) {
+      title.setFontFamily(ERAS[this.flash].th.font).setColor(FLASH_INK[this.flash]);
+    }
 
     // Era timeline: these really are a sequence, so they get a connecting line.
     const g = this.add.graphics();
@@ -86,6 +104,8 @@ export default class Title extends Base {
       const btn = new Button(this, th, 'Start the time trip', () => this.warp('L1', THEMES.dos));
       btn.place(-cw / 2 + bw / 2, y + s(30), bw, s(60), s(18));
       root.add(btn);
+      this.startBtn = btn;
+      if (!this.reduced) this.tweens.add({ targets: btn, scale: 1.05, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.InOut' });
       this.overlayKeys = { Enter: () => this.warp('L1', THEMES.dos), ' ': () => this.warp('L1', THEMES.dos) };
       y += s(60);
     }

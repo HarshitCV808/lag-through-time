@@ -102,7 +102,7 @@ export function panel(scene, th, opts) {
   return fitted;
 }
 
-function buildPanel(scene, th, { kicker, title, body, buttons = [], footer = [], hint }) {
+function buildPanel(scene, th, { kicker, title, body, question, buttons = [], footer = [], hint }) {
   const s = (n) => scene.s(n);
   const { W, H } = scene;
   const pw = Math.min(W - s(32), s(580));
@@ -139,6 +139,14 @@ function buildPanel(scene, th, { kicker, title, body, buttons = [], footer = [],
     });
     items.push(b);
     y += b.height + s(18);
+  }
+  if (question) {
+    const q = scene.add.text(-iw / 2, y, question, {
+      fontFamily: th.body, fontStyle: '700', fontSize: s(th.name === 'dos' ? 26 : 18),
+      color: th.name === 'y2k' ? th.accent : th.ink, wordWrap: { width: iw, useAdvancedWrap: true }, lineSpacing: s(3),
+    });
+    items.push(q);
+    y += q.height + s(14);
   }
   const two = buttons.length > 2 && iw > s(400);
   const gap = s(footer.length ? 10 : 12);

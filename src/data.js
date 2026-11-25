@@ -80,12 +80,12 @@ export const MOMENTS = [
   {
     id: 'reel', clock: '4:00 PM', place: 'Reel edit', useCase: 'Creativity',
     verb: 'TAP', instruction: 'Tap yourself to cut out the background', engine: 'GPU',
-    done: 'Background removed by Intel Arc graphics, right on your laptop',
+    done: 'Background removed by the built-in Intel GPU, right on your laptop',
   },
   {
     id: 'game', clock: '9:00 PM', place: 'Gaming', useCase: 'Gaming',
     verb: 'HOLD', instruction: 'Hold BOOST to switch on AI upscaling', engine: 'GPU',
-    done: 'XeSS AI upscaling on Arc graphics: smoother frames',
+    done: 'XeSS AI upscaling on Intel graphics: smoother frames',
   },
   {
     id: 'notes', clock: '11:30 PM', place: 'Exam night', useCase: 'Everyday',

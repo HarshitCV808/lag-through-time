@@ -24,11 +24,9 @@ export default class Level1Dos extends Base {
     this.bufT = this.add.text(0, 0, '', { fontFamily: 'VT323', color: '#ffd23f' });
     this.time.addEvent({ delay: 500, loop: true, callback: () => { this.cursorOn = !this.cursorOn; this.render(); } });
     this.time.addEvent({ delay: LAG_MS, loop: true, callback: () => this.flush() });
-    this.ask({
-      kicker: 'Level 1 of 4',
+    this.askMulti('L1', 'Level 1 of 4', () => this.boot(), {
       title: '1981: the first PC',
-      body: 'No mouse, no colour, no internet. Just a blinking cursor. Type DIR, RUN and PRINT to finish your homework.',
-      buttons: [{ label: 'Next', onClick: () => this.askMulti('L1', 'Quick question', () => this.boot()) }],
+      body: 'No mouse, no colour. Type DIR, RUN and PRINT, and feel the lag.',
     });
   }
 
@@ -246,7 +244,7 @@ export default class Level1Dos extends Base {
     this.time.delayedCall(700, () => this.ask({
       kicker: `Finished in ${sec}s`,
       title: 'Bhai, itna slow?',
-      body: 'In 1981 a PC did one thing at a time, spoke only text and loaded programs from floppy disks.',
+      body: 'One task at a time, text only, programs on floppy disks.',
       buttons: [{ label: 'Jump to 2003', onClick: () => this.warp('L2', THEMES.y2k) }],
     }));
   }

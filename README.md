@@ -8,7 +8,7 @@ Players live through 45 years of laptop lag, one era per level. Each era looks a
 
 ## How it plays
 
-Each level opens with a quick **multi-select question** about the shopper, such as "What do you do on a laptop most days?" or "Where does your laptop go with you?". The shopper picks as many options as apply. A **time-warp** animation carries them from one era to the next.
+Each level opens with one screen: what the era is about, plus a quick **multi-select question** about the shopper, such as "What do you do on a laptop most days?" or "Where does your laptop go with you?". The shopper picks as many options as apply. A **time-warp** animation carries them from one era to the next.
 
 | Level | Era | Mini-game | What it teaches |
 |---|---|---|---|
@@ -20,7 +20,7 @@ Each level opens with a quick **multi-select question** about the shopper, such 
 After the levels:
 
 1. **Same you, four laptops.** Your time in each era, Intel Core Ultra Series 3 specs (up to 50 TOPS NPU, up to 120 TOPS Arc GPU, up to 180 TOPS in total), and plain-word explanations of TOPS and NPU.
-2. **Why not a cheaper laptop?** Calls out the cheap-laptop trap, then compares Intel with the other laptops on the shelf (Snapdragon/ARM, MacBook).
+2. **Why not a cheaper laptop?** Calls out the cheap-laptop trap, then three tap-to-flip cards: a Snapdragon (ARM) laptop, a MacBook and an AMD Ryzen AI laptop on the front, the Intel answer on the back.
 3. **Budget.** Under ₹1.5 lakh, ₹1.5–2.5 lakh, above ₹2.5 lakh, or "show me the best fit".
 4. **Your match.** Every option picked adds points to four personas (Student, Creator, Gamer, Hustler). Each of the 10 real Core Ultra Series 3 laptops is weighted per persona, and the best-scoring laptop inside the budget wins. The result shows:
    - the shopper's persona mix
@@ -32,6 +32,7 @@ If nobody touches the screen for 90 seconds, the game goes back to the title for
 
 ## Made for the store floor
 
+- **Built to catch passers-by.** The idle title keeps flickering through the four eras, and the start button pulses.
 - **Crisp text everywhere.** The canvas renders at the screen's full pixel density (up to 3x) and is pinned to the viewport so fractional densities never blur it. Text is drawn on whole pixels with whole-pixel font sizes, and the Silkscreen pixel font snaps to its 8px grid. Screens that don't fit are laid out again with smaller type, never shrunk.
 - **Works anywhere.** Runs in the browser on the store's demo laptop or a shopper's phone, in portrait or landscape, and reflows if the screen rotates mid-level.
 - **Zero tech knowledge needed.** Big tap targets, keyboard shortcuts (Enter, number keys, letters), and no jargon without a plain-word explanation.
@@ -45,11 +46,12 @@ If nobody touches the screen for 90 seconds, the game goes back to the title for
 | Creativity (3) | Four eras, each with its own visual style and its own genre: terminal, runner, swipe, microgames. Time-warp transitions, confetti and streaks. |
 | Persuasion (3) | The player feels 45 years of pain before the AI PC level fixes it. Multi-select answers and a budget feed a scored match from 10 real laptops, with a ₹ price, a runner-up and a next step. |
 | Technical accuracy (3) | Real engine roles: NPU for always-on effects, GPU for XeSS and image AI, CPU for quick tasks. Real TOPS figures, with platform caveats. |
-| Competitive superiority (1) | Level 3 shows what cloud-only AI costs you; the comparison page covers the cheap non-AI laptop, ARM/Snapdragon emulation and macOS compatibility, with factual lines only. |
+| Competitive superiority (1) | Level 3 shows what cloud-only AI costs you; tap-to-flip cards covers the cheap non-AI laptop, ARM/Snapdragon emulation and macOS compatibility, with factual lines only. |
 
 ## Facts and sources
 
 - Intel Core Ultra Series 3 (Panther Lake) figures come from Intel platform specs. Real-world results vary by laptop, and the game says so.
+- AMD line: in [Notebookcheck's Panther Lake gaming benchmarks](https://www.notebookcheck.net/Intel-Panther-Lake-with-Arc-B390-takes-on-AMD-Ryzen-Strix-Halo-and-GeForce-RTX-4050-in-our-first-gaming-benchmarks.1200743.0.html), Arc B390 beat the Radeon 890M (used in Ryzen AI 300 and 400) by up to 80% in some games. The card names the Core Ultra X7/X9 chips that have Arc B390.
 - Top TOPS figures are for Core Ultra X9 with Arc B390 graphics, and the game says other models are lower.
 - Laptop models and prices are from Smartprix listings on 25 Nov 2026, and the game tells shoppers to check the in-store price. All game copy and product data live in [`src/data.js`](src/data.js) so they're easy to fact-check.
 - Research notes are in [`research/`](research/).
