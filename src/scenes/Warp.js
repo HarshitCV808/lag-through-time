@@ -56,7 +56,7 @@ export default class Warp extends Phaser.Scene {
     this.year.setScale(1 + Math.sin(p * Math.PI) * 0.25);
     if (p >= 0.85 && !this.snapped) {
       this.snapped = true;
-      this.year.setFontFamily(this.to.font).setColor(this.to.name === 'y2k' ? '#ffffff' : this.to.ink);
+      this.year.setFontFamily(this.to.font).setFontSize(96 * this.k).setColor(this.to.name === 'y2k' ? '#ffffff' : this.to.ink);
       this.label.setText(`Welcome to ${this.to.year}`);
     }
     if (p >= 1 && !this.done) {

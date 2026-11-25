@@ -3,7 +3,7 @@ import { THEMES } from '../theme.js';
 import { Button, drawCard } from '../ui.js';
 import { music, sfx } from '../audio.js';
 import qrcode from 'qrcode-generator';
-import { LAPTOPS, PERSONAS, PRICE_NOTE, BUDGETS, recommend, personaOf, rupees } from '../data.js';
+import { LAPTOPS, PERSONAS, PRICE_NOTE, BUDGETS, recommend, personaOf, rupees, shareQuery } from '../data.js';
 
 const SHORT = { student: 'Student', creator: 'Creator', gamer: 'Gamer', pro: 'Hustler' };
 
@@ -16,9 +16,14 @@ export default class Result extends Base {
     music('ai');
     sfx('win');
     this.animated = false;
-    // Opened from the QR link on a phone: show that laptop, no kiosk reset.
-    this.fromLink = !!(data?.match && LAPTOPS[data.match]);
-    if (this.fromLink) {
+    // Opened from the QR / share link on a phone: rebuild the same result from the link.
+    this.fromLink = !!(data?.share || (data?.match && LAPTOPS[data.match]));
+    if (data?.share) {
+      this.budget = BUDGETS.find((b) => b.id === data.share.budget && b.id !== 'any') || null;
+      const rec = recommend([data.share.scores], data.share.budget);
+      Object.assign(this, { laptop: rec.best, runnerUp: rec.runnerUp, persona: rec.persona, scores: rec.scores });
+    } else if (this.fromLink) {
+      // Older links that only named a laptop.
       this.laptop = { id: data.match, ...LAPTOPS[data.match] };
       this.persona = personaOf(data.match);
       this.runnerUp = null;
@@ -29,7 +34,9 @@ export default class Result extends Base {
       const rec = recommend(this.registry.get('answers') || [], this.budget?.id || 'any');
       Object.assign(this, { laptop: rec.best, runnerUp: rec.runnerUp, persona: rec.persona, scores: rec.scores });
     }
-    this.link = `${location.origin}${location.pathname}?match=${this.laptop.id}`;
+    this.link = this.scores
+      ? `${location.origin}${location.pathname}?${shareQuery(this.scores, this.budget?.id)}`
+      : `${location.origin}${location.pathname}?match=${this.laptop.id}`;
   }
 
   // QR code drawn as vector squares on a white tile (quiet zone included).
@@ -89,8 +96,11 @@ export default class Result extends Base {
     y += text(-cw / 2, y, p.line, 17, { color: th.dim }).height + s(6);
     if (this.scores) {
       const total = Object.values(this.scores).reduce((a, b) => a + b, 0) || 1;
-      const mix = Object.entries(this.scores).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 3)
-        .map(([k, v]) => `${Math.round((v / total) * 100)}% ${SHORT[k]}`).join(', ');
+      const parts = Object.entries(this.scores).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1])
+        .map(([k, v]) => [k, Math.round((v / total) * 100)]);
+      // Rounding can drift to 99% or 101%; the top persona absorbs the difference.
+      if (parts.length) parts[0][1] += 100 - parts.reduce((t, [, p]) => t + p, 0);
+      const mix = parts.slice(0, 3).map(([k, p]) => `${p}% ${SHORT[k]}`).join(', ');
       if (mix) y += text(-cw / 2, y, `Your mix: ${mix}`, 14, { weight: '700', color: th.accent }).height;
     }
     y += s(16);
@@ -159,8 +169,8 @@ export default class Result extends Base {
     this.overlayKeys = { Enter: () => this.demo() };
 
     const sc = Math.min(1, (H - s(36)) / y);
-    root.setScale(sc);
-    root.y = (H - y * sc) / 2;
+    if (this.refit(sc)) return;
+    root.y = Math.max(s(12), (H - y) / 2);
 
     // First time in: slide up, count the price up, throw confetti.
     if (!this.animated && !this.reduced) {

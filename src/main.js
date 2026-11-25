@@ -16,6 +16,21 @@ const FONTS = [
   '600 20px Unbounded', '800 20px Unbounded', '500 20px Manrope', '700 20px Manrope',
 ];
 
+// Crisp text: whole-pixel font sizes everywhere, and the Silkscreen pixel font only at
+// multiples of its 8px grid (in-between sizes make its square pixels uneven and jagged).
+const crispSize = (size, family = '') => {
+  if (typeof size !== 'number') return size;
+  return /Silkscreen/.test(family) ? Math.max(8, Math.round(size / 8) * 8) : Math.round(size);
+};
+const TextStyle = Phaser.GameObjects.TextStyle.prototype;
+const setStyle = TextStyle.setStyle;
+TextStyle.setStyle = function (style, ...rest) {
+  if (style && typeof style.fontSize === 'number') style = { ...style, fontSize: crispSize(style.fontSize, style.fontFamily) };
+  return setStyle.call(this, style, ...rest);
+};
+const setFontSize = TextStyle.setFontSize;
+TextStyle.setFontSize = function (size) { return setFontSize.call(this, crispSize(size, this.fontFamily)); };
+
 const muteBtn = document.getElementById('mute');
 const syncMute = () => {
   muteBtn.setAttribute('aria-pressed', String(!isMuted()));
@@ -48,6 +63,7 @@ addEventListener('keydown', firstGesture, true);
     backgroundColor: '#060d2b',
     scale: { mode: Phaser.Scale.NONE, width: w, height: h, zoom: 1 / DPR },
     input: { activePointers: 2 },
+    render: { roundPixels: true, antialias: true }, // whole-pixel positions keep text sharp
     scene: [Title, Warp, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result],
   });
   addEventListener('resize', () => {

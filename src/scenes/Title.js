@@ -2,7 +2,7 @@ import Base from './Base.js';
 import { THEMES, hex } from '../theme.js';
 import { Button } from '../ui.js';
 import { music } from '../audio.js';
-import { LAPTOPS } from '../data.js';
+import { LAPTOPS, readShare } from '../data.js';
 
 const ERAS = [
   { th: THEMES.dos, year: '1981' },
@@ -15,11 +15,12 @@ export default class Title extends Base {
   constructor() { super('Title'); }
 
   build() {
-    // QR / share link (?match=gamer): open straight on that match, once per page load.
+    // QR / share link (?s=scores&b=budget, or older ?match=laptop): open straight on that result, once per page load.
+    const share = readShare(location.search);
     const match = new URLSearchParams(location.search).get('match');
-    if (LAPTOPS[match] && !this.registry.get('linkUsed')) {
+    if ((share || LAPTOPS[match]) && !this.registry.get('linkUsed')) {
       this.registry.set('linkUsed', true);
-      this.scene.start('Result', { match });
+      this.scene.start('Result', share ? { share } : { match });
     }
     this.registry.set('answers', []);
     this.registry.set('budget', 'any');
@@ -89,7 +90,7 @@ export default class Title extends Base {
       y += s(60);
     }
     const sc = Math.min(1, (H - s(40)) / y);
-    root.setScale(sc);
-    root.y = (H - y * sc) / 2;
+    if (this.refit(sc)) return;
+    root.y = Math.max(s(12), (H - y) / 2);
   }
 }

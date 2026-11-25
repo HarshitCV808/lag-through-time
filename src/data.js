@@ -78,6 +78,9 @@ export const TASKS = [
   { text: 'Erase the background from a photo', engine: 'GPU', why: 'Heavy image AI is fastest on the Arc GPU.' },
   { text: 'Remove noise from my mic', engine: 'NPU', why: 'Always-on audio clean-up belongs on the NPU to save battery.' },
   { text: 'Generate an image from a prompt', engine: 'GPU', why: 'Image generation needs lots of parallel maths, the GPU speciality.' },
+  { text: 'Keep eye contact on calls', engine: 'NPU', why: 'Eye-contact correction runs the whole call, so the low-power NPU handles it.' },
+  { text: 'Add AI effects to a 4K video', engine: 'GPU', why: 'Video effects crunch millions of pixels, a GPU job.' },
+  { text: 'Open apps in a snap', engine: 'CPU', why: 'Snappy everyday jobs are the CPU’s home turf.' },
 ];
 
 export const PERSONAS = {
@@ -181,4 +184,20 @@ export function recommend(answers, budgetId = 'any') {
 export function personaOf(laptopId) {
   const w = LAPTOPS[laptopId]?.w || {};
   return Object.keys(w).reduce((a, b) => ((w[b] || 0) > (w[a] || 0) ? b : a), 'student');
+}
+
+// Share link (QR / Save my match): carries the persona scores and budget, so the phone
+// recomputes exactly the same match, persona, mix and runner-up as the kiosk.
+const PERSONA_KEYS = ['student', 'creator', 'gamer', 'pro'];
+
+export function shareQuery(scores, budgetId) {
+  return `s=${PERSONA_KEYS.map((k) => scores[k] || 0).join('-')}&b=${budgetId || 'any'}`;
+}
+
+export function readShare(search) {
+  const q = new URLSearchParams(search);
+  const n = (q.get('s') || '').split('-').map(Number);
+  if (n.length !== 4 || n.some((x) => !Number.isInteger(x) || x < 0 || x > 99)) return null;
+  const budget = BUDGETS.some((b) => b.id === q.get('b')) ? q.get('b') : 'any';
+  return { scores: Object.fromEntries(PERSONA_KEYS.map((k, i) => [k, n[i]])), budget };
 }

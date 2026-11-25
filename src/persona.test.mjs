@@ -36,3 +36,19 @@ for (const b of BUDGETS.filter((x) => x.max !== Infinity)) {
 }
 assert.equal(recommend(gamer, 'mid').runnerUp.id, 'yoga-pro-7i');
 console.log('ok stretch');
+// The shared link reproduces the kiosk result exactly (persona, laptop, runner-up).
+import { shareQuery, readShare } from './data.js';
+const hustler = [opt('L1', 'Office work and meetings'), opt('L1', 'Editing photos and videos'), opt('L2', 'Client visits and commutes'), opt('L4', 'Privacy for my files')];
+for (const b of ['low', 'mid', 'high', 'any']) {
+  const kiosk = recommend(hustler, b);
+  const shared = readShare('?' + shareQuery(kiosk.scores, b));
+  const phone = recommend([shared.scores], shared.budget);
+  assert.equal(phone.persona, kiosk.persona, b);
+  assert.equal(phone.best.id, kiosk.best.id, b);
+  assert.equal(phone.runnerUp?.id, kiosk.runnerUp?.id, b);
+}
+assert.equal(recommend(hustler).persona, 'pro');
+assert.equal(readShare('?s=1-2-x-4'), null);
+assert.equal(readShare('?s=1-2-3'), null);
+assert.equal(readShare('?s=1-2-3-4&b=evil').budget, 'any');
+console.log('ok share');

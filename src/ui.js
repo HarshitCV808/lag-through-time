@@ -89,7 +89,20 @@ export function drawCard(g, th, x, y, w, h, s, title) {
 }
 
 // Modal panel: kicker, title, body, buttons. Built for the current screen size.
-export function panel(scene, th, { kicker, title, body, buttons = [], footer = [], hint }) {
+export function panel(scene, th, opts) {
+  const c = buildPanel(scene, th, opts);
+  const avail = scene.H - scene.s(24);
+  if (c.ph <= avail) return c;
+  // Too tall: rebuild with smaller type (see Base.refit) instead of scaling the text.
+  c.destroy();
+  const prev = scene.fitMul || 1;
+  scene.fitMul = prev * (avail / c.ph) * 0.98;
+  const fitted = buildPanel(scene, th, opts);
+  scene.fitMul = prev;
+  return fitted;
+}
+
+function buildPanel(scene, th, { kicker, title, body, buttons = [], footer = [], hint }) {
   const s = (n) => scene.s(n);
   const { W, H } = scene;
   const pw = Math.min(W - s(32), s(580));
@@ -159,11 +172,7 @@ export function panel(scene, th, { kicker, title, body, buttons = [], footer = [
   inner.add(g);
   inner.add(items);
   inner.y = Math.max(s(12), (H - ph) / 2);
-  const fitScale = Math.min(1, (H - s(24)) / ph);
-  if (fitScale < 1) {
-    inner.setScale(fitScale);
-    inner.y = (H - ph * fitScale) / 2;
-  }
+  c.ph = ph;
   c.inner = inner;
   c.dim = c.list[0];
   return c;

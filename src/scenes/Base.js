@@ -11,7 +11,19 @@ export default class Base extends Phaser.Scene {
   get H() { return this.scale.height; }
   get portrait() { return this.H > this.W; }
   get k() { return DPR * Phaser.Math.Clamp(Math.min(this.W, this.H) / DPR / 420, 0.78, 1.45); }
-  s(n) { return n * this.k; }
+  s(n) { return n * this.k * (this.fitMul || 1); }
+
+  // Too tall for the screen? Lay out again once with smaller type rather than shrinking
+  // the container: scaled canvas text gets resampled and looks jagged.
+  refit(sc) {
+    if (sc >= 1 || this.refitting) return false;
+    this.refitting = true;
+    this.fitMul = sc * 0.98;
+    this.layout();
+    this.fitMul = 1;
+    this.refitting = false;
+    return true;
+  }
   // Top inset that keeps HUD clear of the mute button / notch.
   get top() { return this.s(18); }
 
