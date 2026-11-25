@@ -21,7 +21,9 @@ export default class Title extends Base {
       this.registry.set('linkUsed', true);
       this.scene.start('Result', { match });
     }
-    this.registry.set('picks', []);
+    this.registry.set('answers', []);
+    this.registry.set('budget', 'any');
+    this.registry.set('privacy', null);
     this.registry.set('times', {});
     music('ai');
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -80,10 +82,10 @@ export default class Title extends Base {
       root.add(sub);
       y += sub.height + s(28);
       const bw = Math.min(cw, s(320));
-      const btn = new Button(this, th, 'Start the time trip', () => this.go('L1'));
+      const btn = new Button(this, th, 'Start the time trip', () => this.warp('L1', THEMES.dos));
       btn.place(-cw / 2 + bw / 2, y + s(30), bw, s(60), s(18));
       root.add(btn);
-      this.overlayKeys = { Enter: () => this.go('L1'), ' ': () => this.go('L1') };
+      this.overlayKeys = { Enter: () => this.warp('L1', THEMES.dos), ' ': () => this.warp('L1', THEMES.dos) };
       y += s(60);
     }
     const sc = Math.min(1, (H - s(40)) / y);

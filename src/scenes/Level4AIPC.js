@@ -1,9 +1,9 @@
 import Phaser from 'phaser';
 import Base from './Base.js';
 import { THEMES, ENGINE_COLORS, hex } from '../theme.js';
-import { drawCard } from '../ui.js';
+import { drawCard, confetti } from '../ui.js';
 import { music, sfx } from '../audio.js';
-import { L4_CHOICES, TASKS, ENGINES } from '../data.js';
+import { TASKS, ENGINES } from '../data.js';
 
 export default class Level4AIPC extends Base {
   constructor() { super('L4'); }
@@ -11,7 +11,7 @@ export default class Level4AIPC extends Base {
   build() {
     this.th = THEMES.ai;
     music('ai');
-    Object.assign(this, { ti: 0, batt: 100, running: false, docks: [], card: null });
+    Object.assign(this, { ti: 0, batt: 100, running: false, docks: [], card: null, streak: 0, best: 0 });
     this.tasks = Phaser.Utils.Array.Shuffle([...TASKS]);
     this.makeHud('Level 4 of 4   2026');
     this.statusT = this.add.text(0, 0, 'Offline   Battery 100%', { fontFamily: 'Manrope', fontStyle: '700', color: this.th.dim });
@@ -22,15 +22,7 @@ export default class Level4AIPC extends Base {
       kicker: 'Level 4 of 4',
       title: '2026: the Intel AI PC',
       body: 'Intel Core Ultra has three AI engines: the CPU for quick jobs, the GPU for graphics-heavy AI, and the NPU, a mini AI brain that sips battery. Send each task to the right one. No internet needed.',
-      buttons: [{ label: 'Wake it up', onClick: () => this.choose() }],
-    });
-  }
-
-  choose() {
-    this.ask({
-      kicker: 'Pick one',
-      title: 'What would you use AI for most?',
-      buttons: L4_CHOICES.map((c) => ({ label: c.label, onClick: () => { this.pick(c.persona); this.start(); } })),
+      buttons: [{ label: 'Next', onClick: () => this.askMulti('L4', 'Quick question', () => this.start()) }],
     });
   }
 
@@ -104,10 +96,15 @@ export default class Level4AIPC extends Base {
       this.statusT.setText(`Offline   Battery ${Math.round(this.batt)}%`);
       this.drawDock(d, 1);
       this.tweens.add({ targets: c, x: d.x, y: d.y, scale: 0.2, alpha: 0, duration: 260, ease: 'Quad.In' });
-      this.hintT.setColor(ENGINE_COLORS[d.engine.id]).setText(`Done on-device by the ${d.engine.id}`);
+      this.streak++;
+      this.best = Math.max(this.best, this.streak);
+      this.hintT.setColor(ENGINE_COLORS[d.engine.id]).setText(this.streak > 1 ? `Done on-device by the ${d.engine.id}. Streak x${this.streak}!` : `Done on-device by the ${d.engine.id}`);
+      confetti(this, d.x, d.y - d.bh / 2, [ENGINE_COLORS[d.engine.id], '#ffffff'], 18 + this.streak * 4, 0.7);
+      this.tweens.add({ targets: d, scale: { from: 1.08, to: 1 }, duration: 260, ease: 'Back.Out' });
       this.time.delayedCall(520, () => { this.drawDock(d, 0); this.ti++; this.nextCard(); });
     } else {
       sfx('no');
+      this.streak = 0;
       this.hintT.setColor('#ffd9e8').setText(c.task.why);
       this.tweens.add({ targets: c, x: c.homeX, y: c.homeY, duration: 150 });
       this.tweens.add({ targets: c, angle: { from: -3, to: 3 }, yoyo: true, repeat: 2, duration: 50, onComplete: () => c.setAngle(0) });
@@ -173,6 +170,7 @@ export default class Level4AIPC extends Base {
     this.record('L4', sec);
     this.hudT.setText(`${sec}s`);
     sfx('win');
+    this.party();
     this.time.delayedCall(400, () => this.ask({
       kicker: `${this.tasks.length} AI tasks in ${sec}s`,
       title: 'Ekdum instant.',

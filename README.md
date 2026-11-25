@@ -8,22 +8,27 @@ Players live through 45 years of laptop lag, one era per level. Each era looks a
 
 ## How it plays
 
+Each level opens with a quick **multi-select question** about the shopper, such as "What do you do on a laptop most days?" or "Where does your laptop go with you?". The shopper picks as many options as apply. A **time-warp** animation carries them from one era to the next.
+
 | Level | Era | Mini-game | What it teaches |
 |---|---|---|---|
 | 1 | 1981, first PC | Type `DIR`, `RUN`, `PRINT` on a laggy green-screen terminal and swap the floppy disk | One task at a time, text only |
-| 2 | 2003, Wi-Fi laptop | Finish a dial-up download; tap the charger plug before the battery dies | Short battery life, slow internet |
-| 3 | 2015, cloud AI | Close privacy pop-ups and wait out Wi-Fi drops while cloud AI edits your file | Cloud AI needs internet, waits in queues, and your files leave the laptop |
-| 4 | 2026, Intel AI PC | Send 7 everyday AI tasks to the right engine: CPU, GPU or NPU | On-device AI: instant, offline, private, battery-friendly |
+| 2 | 2003, Battery Dash | Endless-runner: a little laptop runs to class, jumps coffee cups and bags, and grabs plug points before the battery dies | Short battery life, chained to the charger |
+| 3 | 2015, Swipe the permissions | Dating-app style swipes: cloud AI keeps asking for your data (contacts, location, face data…). Swipe left to deny, right to allow, while Wi-Fi drops freeze everything | Cloud AI needs internet, and your data leaves the laptop |
+| 4 | 2026, Intel AI PC | Drag or tap 7 everyday AI tasks onto the right engine: CPU, GPU or NPU. Streaks and bursts reward every right answer | On-device AI: instant, offline, private, battery-friendly |
 
 After the levels:
 
-1. **Same you, four laptops.** Your time in each era, Intel Core Ultra Series 3 specs (NPU ~50 TOPS, Arc GPU ~120 TOPS, up to ~180 platform TOPS), and plain-word explanations of TOPS and NPU.
+1. **Same you, four laptops.** Your time in each era, Intel Core Ultra Series 3 specs (up to 50 TOPS NPU, up to 120 TOPS Arc GPU, up to 180 TOPS in total), and plain-word explanations of TOPS and NPU.
 2. **Why not a cheaper laptop?** Calls out the cheap-laptop trap, then compares Intel with the other laptops on the shelf (Snapdragon/ARM, MacBook).
-3. **Your match.** The choices you made in levels 2–4 decide your persona (Student, Creator, Gamer or Hustler). You get a real Intel AI PC laptop with its ₹ price, three reasons it fits you, and a clear next step:
-   - **Get a hands-on demo:** show the screen to a store expert.
-   - **Scan the QR code** (or tap "Save my match" on a phone) to take the pick home. The link opens straight to that match.
+3. **Budget.** Under ₹1.5 lakh, ₹1.5–2.5 lakh, above ₹2.5 lakh, or "show me the best fit".
+4. **Your match.** Every option picked adds points to four personas (Student, Creator, Gamer, Hustler). Each of the 10 real Core Ultra Series 3 laptops is weighted per persona, and the best-scoring laptop inside the budget wins. The result shows:
+   - the shopper's persona mix
+   - the laptop, its ₹ price and three reasons it fits
+   - a runner-up: either "Worth stretching for" (at most 30% over budget) or "Also a great fit"
+   - the next step: get a hands-on demo, or scan the QR code / tap "Save my match" to take the pick home
 
-The result screen goes back to the title after 2 minutes, ready for the next shopper.
+If nobody touches the screen for 90 seconds, the game goes back to the title for the next shopper.
 
 ## Made for the store floor
 
@@ -36,15 +41,16 @@ The result screen goes back to the title after 2 minutes, ready for the next sho
 
 | Criterion | In the game |
 |---|---|
-| Creativity (3) | Four eras, each in its own visual style. The title morphs through all four looks. |
-| Persuasion (3) | The player feels 45 years of pain before the AI PC level fixes it. Ends with a personal match, a ₹ price and a next step. |
+| Creativity (3) | Four eras, each with its own visual style and its own genre: terminal, runner, swipe, drag-and-drop. Time-warp transitions, confetti and streaks. |
+| Persuasion (3) | The player feels 45 years of pain before the AI PC level fixes it. Multi-select answers and a budget feed a scored match from 10 real laptops, with a ₹ price, a runner-up and a next step. |
 | Technical accuracy (3) | Real engine roles: NPU for always-on effects, GPU for XeSS and image AI, CPU for quick tasks. Real TOPS figures, with platform caveats. |
 | Competitive superiority (1) | Cheap non-AI laptop, ARM/Snapdragon emulation and macOS compatibility, each compared with factual lines only. |
 
 ## Facts and sources
 
 - Intel Core Ultra Series 3 (Panther Lake) figures come from Intel platform specs. Real-world results vary by laptop, and the game says so.
-- Laptop prices are from Smartprix listings on 25 Nov 2026, and the game tells shoppers to check the in-store price. All game copy and product data live in [`src/data.js`](src/data.js) so they're easy to fact-check.
+- Top TOPS figures are for Core Ultra X9 with Arc B390 graphics, and the game says other models are lower.
+- Laptop models and prices are from Smartprix listings on 25 Nov 2026, and the game tells shoppers to check the in-store price. All game copy and product data live in [`src/data.js`](src/data.js) so they're easy to fact-check.
 - Research notes are in [`research/`](research/).
 
 ## Run it locally
@@ -52,7 +58,7 @@ The result screen goes back to the title after 2 minutes, ready for the next sho
 ```bash
 npm install
 npm run dev      # local dev server
-npm test         # persona + data self-check
+npm test         # matching engine + data self-check
 npm run build    # production build in dist/
 ```
 
@@ -73,9 +79,9 @@ cd dist && touch .nojekyll && git init -b gh-pages && git add -A && git commit -
 ```
 src/
   main.js          game boot, crisp hi-DPI canvas, sound unlock
-  data.js          all copy, tasks, personas, laptops, prices
+  data.js          questions, tasks, permissions, laptop catalogue, matching engine
   theme.js         era palettes and fonts
   ui.js            themed buttons, cards, modal panels, backdrops
   audio.js         Web Audio synth (music + sound effects)
-  scenes/          Title, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result
+  scenes/          Title, Warp, Level1Dos, Level2Battery (runner), Level3Cloud (swipe), Level4AIPC, Versus, Result
 ```

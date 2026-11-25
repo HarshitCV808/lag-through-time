@@ -42,11 +42,13 @@ export class Button extends Phaser.GameObjects.Container {
     const y = -h / 2;
     const lw = Math.max(2, h * 0.05);
     g.clear();
+    this.setAlpha(opts.disabled ? 0.4 : 1);
     const fill = hex(opts.fill || th.btnFill);
     if (th.name === 'y2k') {
-      g.fillStyle(this.hover ? 0xdedbd2 : fill).fillRect(x, y, w, h);
-      g.lineStyle(lw, 0xffffff).lineBetween(x, y, x + w, y).lineBetween(x, y, x, y + h);
-      g.lineStyle(lw, 0x3a3a3a).lineBetween(x, y + h, x + w, y + h).lineBetween(x + w, y, x + w, y + h);
+      const [hi, lo] = opts.pressed ? [0x3a3a3a, 0xffffff] : [0xffffff, 0x3a3a3a];
+      g.fillStyle(this.hover && !opts.fill ? 0xdedbd2 : fill).fillRect(x, y, w, h);
+      g.lineStyle(lw, hi).lineBetween(x, y, x + w, y).lineBetween(x, y, x, y + h);
+      g.lineStyle(lw, lo).lineBetween(x, y + h, x + w, y + h).lineBetween(x + w, y, x + w, y + h);
       return;
     }
     const r = th.name === 'cloud' ? h / 2 : th.name === 'ai' ? h * 0.28 : 0;
@@ -87,7 +89,7 @@ export function drawCard(g, th, x, y, w, h, s, title) {
 }
 
 // Modal panel: kicker, title, body, buttons. Built for the current screen size.
-export function panel(scene, th, { kicker, title, body, buttons = [] }) {
+export function panel(scene, th, { kicker, title, body, buttons = [], footer = [], hint }) {
   const s = (n) => scene.s(n);
   const { W, H } = scene;
   const pw = Math.min(W - s(32), s(580));
@@ -126,8 +128,8 @@ export function panel(scene, th, { kicker, title, body, buttons = [] }) {
     y += b.height + s(18);
   }
   const two = buttons.length > 2 && iw > s(400);
-  const gap = s(12);
-  const bh = s(56);
+  const gap = s(footer.length ? 10 : 12);
+  const bh = s(footer.length && buttons.length > 4 && !two ? 48 : 56);
   const bw = two ? (iw - gap) / 2 : iw;
   buttons.forEach((b, i) => {
     const col = two ? i % 2 : 0;
@@ -138,6 +140,18 @@ export function panel(scene, th, { kicker, title, body, buttons = [] }) {
   });
   const rows = two ? Math.ceil(buttons.length / 2) : buttons.length;
   if (rows) y += rows * bh + (rows - 1) * gap;
+  if (hint) {
+    const h = scene.add.text(0, y + s(12), hint, { fontFamily: th.body, fontStyle: '700', fontSize: s(th.name === 'dos' ? 20 : 14), color: th.name === 'y2k' ? '#8a1010' : th.name === 'cloud' ? '#c42b2e' : '#ffb3c7', align: 'center' }).setOrigin(0.5, 0);
+    items.push(h);
+    y += s(12) + h.height;
+  }
+  footer.forEach((b) => {
+    y += s(18);
+    const btn = new Button(scene, th, b.label, b.onClick, b.opts);
+    btn.place(0, y + s(28), iw, s(56), s(th.name === 'dos' ? 24 : 17));
+    items.push(btn);
+    y += s(56);
+  });
   const ph = y + pad;
 
   const g = scene.add.graphics();
@@ -150,7 +164,36 @@ export function panel(scene, th, { kicker, title, body, buttons = [] }) {
     inner.setScale(fitScale);
     inner.y = (H - ph * fitScale) / 2;
   }
+  c.inner = inner;
+  c.dim = c.list[0];
   return c;
+}
+
+// One-shot confetti burst. Canvas can't tint, so each colour gets its own tiny texture.
+export function confetti(scene, x, y, colors, count = 40, spread = 1) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  colors.forEach((col) => {
+    const key = `px-${col}`;
+    if (!scene.textures.exists(key)) {
+      const g = scene.make.graphics({ add: false });
+      g.fillStyle(hex(col)).fillRect(0, 0, 8, 12);
+      g.generateTexture(key, 8, 12);
+      g.destroy();
+    }
+    const k = scene.k;
+    const em = scene.add.particles(x, y, key, {
+      speed: { min: 180 * k * spread, max: 520 * k * spread },
+      angle: { min: 200, max: 340 },
+      gravityY: 900 * k,
+      lifespan: 1400,
+      rotate: { start: 0, end: 540 },
+      scale: { start: k * 0.9, end: k * 0.5 },
+      alpha: { start: 1, end: 0 },
+      emitting: false,
+    }).setDepth(200);
+    em.explode(Math.ceil(count / colors.length));
+    scene.time.delayedCall(1600, () => em.destroy());
+  });
 }
 
 // Per-era background.

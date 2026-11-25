@@ -25,7 +25,24 @@ export default class Level1Dos extends Base {
       kicker: 'Level 1 of 4',
       title: '1981: the first PC',
       body: 'No mouse, no colour, no internet. Just a blinking cursor. Type DIR, RUN and PRINT to finish your homework.',
-      buttons: [{ label: 'Power on', onClick: () => this.start() }],
+      buttons: [{ label: 'Next', onClick: () => this.askMulti('L1', 'Quick question', () => this.boot()) }],
+    });
+  }
+
+  // CRT power-on: a bright line snaps open into the screen.
+  boot() {
+    if (this.reduced) return this.start();
+    const line = this.add.rectangle(this.W / 2, this.H / 2, this.W, this.s(4), 0xb6ffcc).setDepth(50);
+    const cover = this.add.rectangle(this.W / 2, this.H / 2, this.W, this.H, 0x000000).setDepth(49);
+    this.tweens.add({ targets: line, scaleX: { from: 0.02, to: 1 }, duration: 220, ease: 'Quad.Out' });
+    this.tweens.add({
+      targets: [line, cover], scaleY: { from: 1, to: 0 }, delay: 240, duration: 0,
+      onComplete: () => {
+        cover.destroy();
+        line.setSize(this.W, this.H).setPosition(this.W / 2, this.H / 2).setScale(1).setAlpha(0.35);
+        this.tweens.add({ targets: line, alpha: 0, duration: 260, onComplete: () => line.destroy() });
+        this.start();
+      },
     });
   }
 
@@ -210,11 +227,12 @@ export default class Level1Dos extends Base {
     this.record('L1', sec);
     this.hudT.setText(`${sec}s`);
     sfx('win');
+    this.party();
     this.time.delayedCall(700, () => this.ask({
       kicker: `Finished in ${sec}s`,
       title: 'Bhai, itna slow?',
       body: 'In 1981 a PC did one thing at a time, spoke only text and loaded programs from floppy disks.',
-      buttons: [{ label: 'Jump to 2003', onClick: () => this.go('L2') }],
+      buttons: [{ label: 'Jump to 2003', onClick: () => this.warp('L2', THEMES.y2k) }],
     }));
   }
 }

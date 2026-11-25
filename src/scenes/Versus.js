@@ -2,6 +2,7 @@ import Base from './Base.js';
 import { THEMES, hex } from '../theme.js';
 import { Button } from '../ui.js';
 import { music } from '../audio.js';
+import { BUDGETS } from '../data.js';
 
 const ROWS = [
   { key: 'L1', year: '1981', name: 'First PC', pain: 'Text only. One task at a time.', th: THEMES.dos },
@@ -11,8 +12,8 @@ const ROWS = [
 ];
 
 const STATS = [
-  { n: '50', l: 'TOPS on the NPU' },
-  { n: '120', l: 'TOPS on Arc graphics' },
+  { n: '50', l: 'TOPS on the NPU, up to' },
+  { n: '120', l: 'TOPS on Arc graphics, up to' },
   { n: '180', l: 'TOPS total, up to' },
 ];
 
@@ -37,7 +38,8 @@ export default class Versus extends Base {
     this.th = THEMES.ai;
     music('ai');
     this.page = 0;
-    const next = () => (this.page === 0 ? (this.page = 1, this.relayout()) : this.go('Result'));
+    this.animPage = -1;
+    const next = () => (this.page === 0 ? this.turnPage() : this.askBudget());
     this.overlayKeys = { Enter: next, ' ': next };
   }
 
@@ -90,8 +92,8 @@ export default class Versus extends Base {
       });
       y += s(98);
       y += text(-cw / 2, y, TOPS_HELP, 14, { color: th.dim }).height + s(20);
-      button('Why not a cheaper laptop?', () => { this.page = 1; this.relayout(); });
-      y += text(-cw / 2, y, 'Figures are Intel platform specs for Core Ultra Series 3. Real-world results vary by laptop.', 12, { color: th.dim }).setAlpha(0.8).height;
+      button('Why not a cheaper laptop?', () => this.turnPage());
+      y += text(-cw / 2, y, 'Top figures are for Core Ultra X9 with Arc B390 graphics. Other models are lower, and real-world results vary.', 12, { color: th.dim }).setAlpha(0.8).height;
     } else {
       // The cheap-laptop trap from the brief, called out in warm red.
       const trapT = text(-cw / 2 + s(18), y + s(16), TRAP.title, 22, { font: 'Unbounded', weight: '800', color: '#ffb3c7', wrap: cw - s(36) });
@@ -106,11 +108,34 @@ export default class Versus extends Base {
         y += text(-cw / 2 + s(20), y, w, 15, { color: th.dim, wrap: cw - s(20) }).height + s(12);
       });
       y += s(10);
-      button('Get my laptop match', () => this.go('Result'));
+      button('Get my laptop match', () => this.askBudget());
     }
 
     const sc = Math.min(1, (H - s(36)) / y);
     root.setScale(sc);
     root.y = (H - y * sc) / 2;
+    // Staggered entrance, once per page (not on resize).
+    if (this.animPage !== this.page && !this.reduced) {
+      this.animPage = this.page;
+      root.list.forEach((o, i) => {
+        const y0 = o.y;
+        o.setAlpha(0).setY(y0 + s(18));
+        this.tweens.add({ targets: o, alpha: 1, y: y0, delay: 40 + i * 28, duration: 320, ease: 'Quad.Out' });
+      });
+    }
+  }
+
+  turnPage() {
+    this.page = 1;
+    this.relayout();
+  }
+
+  askBudget() {
+    this.ask({
+      kicker: 'Last question',
+      title: 'What’s your budget?',
+      body: 'We’ll match the best Intel AI PC inside it.',
+      buttons: BUDGETS.map((b) => ({ label: b.label, onClick: () => { this.registry.set('budget', b.id); this.go('Result'); } })),
+    });
   }
 }

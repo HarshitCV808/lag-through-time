@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DPR, THEMES, hex } from '../theme.js';
-import { backdrop, panel } from '../ui.js';
+import { backdrop, panel, confetti } from '../ui.js';
+import { QUESTIONS } from '../data.js';
 import { sfx } from '../audio.js';
 
 // Shared scene plumbing: responsive sizing, era backdrop, modal panels, scene hand-off.
@@ -48,10 +49,68 @@ export default class Base extends Phaser.Scene {
     }
   }
 
-  showOverlay(fn) {
+  showOverlay(fn, animate = true) {
     this.overlayFn = fn;
     this.overlay?.destroy();
     this.overlay = fn();
+    const o = this.overlay;
+    if (animate && o?.inner && !this.reduced) {
+      const y = o.inner.y;
+      o.inner.setAlpha(0).setY(y + this.s(24));
+      o.dim.setAlpha(0);
+      this.tweens.add({ targets: o.inner, alpha: 1, y, duration: 260, ease: 'Back.Out' });
+      this.tweens.add({ targets: o.dim, alpha: 1, duration: 200 });
+    }
+  }
+
+  get reduced() { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+
+  party(x = this.W / 2, y = this.H * 0.45, count = 60) {
+    confetti(this, x, y, this.th.party, count);
+  }
+
+  // Multi-select question for this level: toggle chips, then Continue (needs at least one).
+  askMulti(levelKey, kicker, onDone) {
+    const q = QUESTIONS[levelKey];
+    const picked = new Set();
+    let hint = '';
+    const build = () => {
+      const keys = {};
+      const toggle = (i) => { picked.has(i) ? picked.delete(i) : picked.add(i); hint = ''; this.showOverlay(build, false); };
+      const done = () => {
+        if (!picked.size) { hint = 'Pick at least one'; sfx('no'); this.showOverlay(build, false); return; }
+        this.hideOverlay();
+        this.registry.set('answers', [...(this.registry.get('answers') || []), ...[...picked].map((i) => q.options[i].w)]);
+        onDone();
+      };
+      const on = this.th.chipOn;
+      const buttons = q.options.map((o, i) => {
+        keys[String(i + 1)] = () => toggle(i);
+        const sel = picked.has(i);
+        return {
+          label: (sel ? '✓ ' : '') + o.label,
+          onClick: () => toggle(i),
+          opts: sel ? { fill: on.fill, ink: on.ink, pressed: on.pressed } : { ghost: true },
+        };
+      });
+      keys.Enter = done;
+      this.overlayKeys = keys;
+      return panel(this, this.th, {
+        kicker, title: q.title, body: 'Pick all that apply.', buttons, hint,
+        footer: [{ label: picked.size ? `Continue with ${picked.size}` : 'Continue', onClick: done, opts: { disabled: !picked.size } }],
+      });
+    };
+    this.showOverlay(build);
+  }
+
+  // Era hand-off through the time-warp scene.
+  warp(next, toTheme) {
+    if (this.leaving) return;
+    if (this.reduced) return this.go(next);
+    this.leaving = true;
+    sfx('warp');
+    this.cameras.main.flash(160, 255, 255, 255);
+    this.time.delayedCall(140, () => this.scene.start('Warp', { next, from: this.th, to: toTheme }));
   }
 
   hideOverlay() {
@@ -85,9 +144,6 @@ export default class Base extends Phaser.Scene {
     this.registry.set('times', { ...(this.registry.get('times') || {}), [level]: sec });
   }
 
-  pick(persona) {
-    this.registry.set('picks', [...(this.registry.get('picks') || []), persona]);
-  }
 
   secs() {
     return Math.max(1, Math.round((this.time.now - this.t0) / 1000));
@@ -104,7 +160,8 @@ export default class Base extends Phaser.Scene {
     const fs = this.s(this.th.name === 'dos' ? 22 : 15);
     this.hudL.setPosition(this.s(18), this.top).setFontSize(fs);
     this.hudT.setOrigin(1, 0).setPosition(this.W - 66 * DPR, this.top).setFontSize(fs);
-    return this.top + this.hudL.height + this.s(10);
+    // Content starts below the HUD and the 44px mute button (top-right, ~10px inset).
+    return Math.max(this.top + this.hudL.height + this.s(10), 62 * DPR);
   }
 
   tickHud() {

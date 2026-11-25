@@ -3,9 +3,10 @@ import { THEMES } from '../theme.js';
 import { Button, drawCard } from '../ui.js';
 import { music, sfx } from '../audio.js';
 import qrcode from 'qrcode-generator';
-import { LAPTOPS, PERSONAS, PRICE_NOTE, topPersona } from '../data.js';
+import { LAPTOPS, PERSONAS, PRICE_NOTE, BUDGETS, recommend, personaOf, rupees } from '../data.js';
 
-const IDLE_RESET_MS = 120000; // in-store kiosk: return to the title for the next shopper
+const SHORT = { student: 'Student', creator: 'Creator', gamer: 'Gamer', pro: 'Hustler' };
+
 
 export default class Result extends Base {
   constructor() { super('Result'); }
@@ -14,12 +15,21 @@ export default class Result extends Base {
     this.th = THEMES.ai;
     music('ai');
     sfx('win');
-    // Opened from the QR link on a phone: show that match, no kiosk reset.
+    this.animated = false;
+    // Opened from the QR link on a phone: show that laptop, no kiosk reset.
     this.fromLink = !!(data?.match && LAPTOPS[data.match]);
-    this.persona = this.fromLink ? data.match : topPersona(this.registry.get('picks') || []);
-    this.laptop = LAPTOPS[this.persona];
-    this.link = `${location.origin}${location.pathname}?match=${this.persona}`;
-    if (!this.fromLink) this.time.delayedCall(IDLE_RESET_MS, () => this.go('Title'));
+    if (this.fromLink) {
+      this.laptop = { id: data.match, ...LAPTOPS[data.match] };
+      this.persona = personaOf(data.match);
+      this.runnerUp = null;
+      this.scores = null;
+      this.budget = null;
+    } else {
+      this.budget = BUDGETS.find((b) => b.id === this.registry.get('budget') && b.id !== 'any') || null;
+      const rec = recommend(this.registry.get('answers') || [], this.budget?.id || 'any');
+      Object.assign(this, { laptop: rec.best, runnerUp: rec.runnerUp, persona: rec.persona, scores: rec.scores });
+    }
+    this.link = `${location.origin}${location.pathname}?match=${this.laptop.id}`;
   }
 
   // QR code drawn as vector squares on a white tile (quiet zone included).
@@ -39,7 +49,7 @@ export default class Result extends Base {
   }
 
   async save() {
-    const data = { title: 'My Intel AI PC match', text: `${this.laptop.model}, ${this.laptop.price}`, url: this.link };
+    const data = { title: 'My Intel AI PC match', text: `${this.laptop.model}, ${rupees(this.laptop.price)}`, url: this.link };
     try {
       if (navigator.share) return await navigator.share(data);
       await navigator.clipboard.writeText(this.link);
@@ -76,7 +86,14 @@ export default class Result extends Base {
     }));
     let y = 0;
     y += text(-cw / 2, y, p.title, 30, { font: 'Unbounded', weight: '800' }).height + s(8);
-    y += text(-cw / 2, y, p.line, 17, { color: th.dim }).height + s(20);
+    y += text(-cw / 2, y, p.line, 17, { color: th.dim }).height + s(6);
+    if (this.scores) {
+      const total = Object.values(this.scores).reduce((a, b) => a + b, 0) || 1;
+      const mix = Object.entries(this.scores).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]).slice(0, 3)
+        .map(([k, v]) => `${Math.round((v / total) * 100)}% ${SHORT[k]}`).join(', ');
+      if (mix) y += text(-cw / 2, y, `Your mix: ${mix}`, 14, { weight: '700', color: th.accent }).height;
+    }
+    y += s(16);
 
     // Laptop card.
     const ip = s(22);
@@ -86,11 +103,11 @@ export default class Result extends Base {
     let cy = cardTop + ip;
     const parts = [];
     const ctext = (str, fs, opts) => { const t = text(-cw / 2 + ip, cy, str, fs, { wrap: cw - ip * 2, ...opts }); parts.push(t); cy += t.height; return t; };
-    ctext('Your Intel AI PC match', 14, { weight: '700', color: th.accent }); cy += s(6);
+    ctext(this.budget ? `Your best match, ${this.budget.label.toLowerCase()}` : 'Your Intel AI PC match', 14, { weight: '700', color: th.accent }); cy += s(6);
     ctext(L.model, 22, { font: 'Unbounded', weight: '800' }); cy += s(6);
     ctext(L.chip, 16, { weight: '700' }); cy += s(2);
     ctext(L.specs, 15, { color: th.dim }); cy += s(12);
-    ctext(L.price, 30, { font: 'Unbounded', weight: '800', color: th.accent }); cy += s(4);
+    const priceT = ctext(rupees(L.price), 30, { font: 'Unbounded', weight: '800', color: th.accent }); cy += s(4);
     ctext(PRICE_NOTE, 12, { color: th.dim }); cy += s(14);
     L.why.forEach((w) => {
       g.fillStyle(0x2ef2c8).fillRect(-cw / 2 + ip, cy + s(8), s(8), s(8));
@@ -99,7 +116,20 @@ export default class Result extends Base {
     });
     cy += ip - s(8);
     drawCard(cardG, th, -cw / 2, cardTop, cw, cy - cardTop, s);
-    y = cy + s(20);
+    y = cy + s(14);
+
+    // Runner-up: a better pick just above budget, or the next best inside it.
+    if (this.runnerUp) {
+      const r = this.runnerUp;
+      const rg = add(this.add.graphics());
+      const t1 = text(-cw / 2 + s(16), y + s(12), r.tag, 13, { weight: '700', color: '#ffc145', wrap: cw - s(32) });
+      const t2 = text(-cw / 2 + s(16), y + s(16) + t1.height, `${r.model}, ${rupees(r.price)}`, 15, { weight: '700', wrap: cw - s(32) });
+      const rh = s(28) + t1.height + t2.height;
+      rg.lineStyle(s(1.5), 0xffc145, 0.6).strokeRoundedRect(-cw / 2, y, cw, rh, s(14));
+      y += rh + s(16);
+    } else {
+      y += s(6);
+    }
 
     const gap = s(12);
     const wide = cw > s(440);
@@ -131,5 +161,18 @@ export default class Result extends Base {
     const sc = Math.min(1, (H - s(36)) / y);
     root.setScale(sc);
     root.y = (H - y * sc) / 2;
+
+    // First time in: slide up, count the price up, throw confetti.
+    if (!this.animated && !this.reduced) {
+      this.animated = true;
+      root.list.forEach((o, i) => {
+        const y0 = o.y;
+        o.setAlpha(0).setY(y0 + s(24));
+        this.tweens.add({ targets: o, alpha: 1, y: y0, delay: i * 22, duration: 360, ease: 'Quad.Out' });
+      });
+      const n = { v: 0 };
+      this.tweens.add({ targets: n, v: L.price, duration: 900, delay: 250, ease: 'Cubic.Out', onUpdate: () => priceT.active && priceT.setText(rupees(Math.round(n.v / 10) * 10)), onComplete: () => priceT.active && priceT.setText(rupees(L.price)) });
+      this.time.delayedCall(450, () => this.party(W / 2, H * 0.25, 90));
+    }
   }
 }

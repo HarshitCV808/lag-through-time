@@ -8,6 +8,7 @@ import Level3Cloud from './scenes/Level3Cloud.js';
 import Level4AIPC from './scenes/Level4AIPC.js';
 import Versus from './scenes/Versus.js';
 import Result from './scenes/Result.js';
+import Warp from './scenes/Warp.js';
 
 const FONTS = [
   '20px VT323', '400 20px Silkscreen', '700 20px Silkscreen',
@@ -47,11 +48,23 @@ addEventListener('keydown', firstGesture, true);
     backgroundColor: '#060d2b',
     scale: { mode: Phaser.Scale.NONE, width: w, height: h, zoom: 1 / DPR },
     input: { activePointers: 2 },
-    scene: [Title, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result],
+    scene: [Title, Warp, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result],
   });
   addEventListener('resize', () => {
     game.scale.resize(...size());
     game.scale.setZoom(1 / DPR);
   });
   window.__game = game; // debug handle
+
+  // Kiosk: if a shopper walks away mid-game, return to the title after 90 s without input.
+  // (A phone that opened a saved match link is left alone.)
+  let lastInput = Date.now();
+  const touch = () => (lastInput = Date.now());
+  addEventListener('pointerdown', touch, true);
+  addEventListener('keydown', touch, true);
+  setInterval(() => {
+    const scene = game.scene.getScenes(true)[0];
+    if (!scene || scene.scene.key === 'Title' || scene.fromLink) return;
+    if (Date.now() - lastInput > 90000) { touch(); scene.scene.start('Title'); }
+  }, 5000);
 })();
