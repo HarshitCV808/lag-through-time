@@ -7,7 +7,8 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node src/persona.test.mjs"
+    "test": "node src/persona.test.mjs",
+    "deploy": "sh scripts/deploy.sh"
   },
   "dependencies": {
     "phaser": "^3.90.0",

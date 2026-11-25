@@ -67,13 +67,11 @@ npm run build    # production build in dist/
 
 ## Deploy
 
-The site is served from the `gh-pages` branch:
-
 ```bash
-npm run build
-cd dist && touch .nojekyll && git init -b gh-pages && git add -A && git commit -m "Deploy" \
-  && git push -f https://github.com/HarshitCV808/lag-through-time.git gh-pages && rm -rf .git
+npm run deploy
 ```
+
+This runs the tests, builds, and merges `dist/` into the `gh-pages` branch. Older hashed script files are kept on purpose: browsers cache the page for about 10 minutes, and a cached page must still find the script it points at.
 
 ## Tech
 
