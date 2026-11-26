@@ -8,6 +8,18 @@ Players live through 45 years of laptop lag, one era per level. Each era looks a
 
 ## How it plays
 
+Every level is played **on the screen of a computer from its era, in a room from that era**:
+
+| Level | Machine | Room |
+|---|---|---|
+| 1981 | Beige CRT desktop with floppy drives and a clicky keyboard | Wood-panelled study, desk lamp, 1981 calendar |
+| 2003 | Chunky grey laptop | College hostel: blinds, posters, bookshelf |
+| 2015 | Thin aluminium laptop | Café: brick wall, chalk menu, pendant lamps, coffee |
+| 2026 | Near-borderless AI PC with glowing keys | Night-time room: neon strip, city window, plant |
+
+On laptop and kiosk screens (and wide landscape) the whole desk scene shows. Upright phones and short landscape phones get a slim era-coloured bezel instead, so the game stays big enough to play.
+
+
 Each level opens with one screen: what the era is about, plus a quick **multi-select question** about the shopper, such as "What do you do on a laptop most days?" or "Where does your laptop go with you?". The shopper picks as many options as apply. A **time-warp** animation carries them from one era to the next.
 
 | Level | Era | Mini-game | What it teaches |
@@ -84,5 +96,6 @@ src/
   theme.js         era palettes and fonts
   ui.js            themed buttons, cards, modal panels, backdrops
   audio.js         Web Audio synth (music + sound effects)
-  scenes/          Title, Warp, Level1Dos, Level2Battery (runner), Level3Cloud (swipe), Level4AIPC, Versus, Result
+  frame.js         era rooms and machines around each level's screen
+  scenes/          Frame (background), Title, Warp, Level1Dos, Level2Battery (runner), Level3Cloud (swipe), Level4AIPC, Versus, Result
 ```

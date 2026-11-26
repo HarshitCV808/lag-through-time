@@ -33,8 +33,9 @@ export default class Level4AIPC extends Base {
     this.la = this.add.text(0, 0, '', st('Manrope', '700', '#ffffff')).setOrigin(0.5).setDepth(5);
     this.lb = this.add.text(0, 0, '', st('Unbounded', '800', '#04102e')).setOrigin(0.5).setDepth(5);
     this.lc = this.add.text(0, 0, '', { ...st('Manrope', '700', '#ffffff'), align: 'center' }).setOrigin(0.5).setDepth(5);
-    this.input.on('pointerdown', (p) => this.down(p));
-    this.input.on('pointermove', (p) => this.move(p));
+    // World coordinates: the level is drawn on the era laptop's screen, not the full canvas.
+    this.input.on('pointerdown', (p) => this.down({ x: p.worldX, y: p.worldY }));
+    this.input.on('pointermove', (p) => this.move({ x: p.worldX, y: p.worldY, isDown: p.isDown }));
     this.input.on('pointerup', () => this.up());
     this.input.keyboard.on('keyup', () => this.up());
     this.askMulti('L4', 'Level 4 of 4', () => this.start(), {

@@ -9,6 +9,7 @@ import Level4AIPC from './scenes/Level4AIPC.js';
 import Versus from './scenes/Versus.js';
 import Result from './scenes/Result.js';
 import Warp from './scenes/Warp.js';
+import Frame from './scenes/Frame.js';
 
 const FONTS = [
   '20px VT323', '400 20px Silkscreen', '700 20px Silkscreen',
@@ -66,7 +67,7 @@ addEventListener('keydown', firstGesture, true);
     scale: { mode: Phaser.Scale.NONE, width: w, height: h, zoom: 1 / DPR },
     input: { activePointers: 2 },
     render: { roundPixels: true, antialias: true }, // whole-pixel positions keep text sharp
-    scene: [Title, Warp, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result],
+    scene: [Frame, Title, Warp, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result],
   });
   addEventListener('resize', () => {
     game.scale.resize(...size());
@@ -81,7 +82,7 @@ addEventListener('keydown', firstGesture, true);
   addEventListener('pointerdown', touch, true);
   addEventListener('keydown', touch, true);
   setInterval(() => {
-    const scene = game.scene.getScenes(true)[0];
+    const scene = game.scene.getScenes(true).find((s) => s.scene.key !== 'Frame');
     if (!scene || scene.scene.key === 'Title' || scene.fromLink) return;
     if (Date.now() - lastInput > 90000) { touch(); scene.scene.start('Title'); }
   }, 5000);

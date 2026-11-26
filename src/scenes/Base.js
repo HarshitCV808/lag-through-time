@@ -2,13 +2,35 @@ import Phaser from 'phaser';
 import { DPR, THEMES, hex } from '../theme.js';
 import { backdrop, panel, confetti } from '../ui.js';
 import { QUESTIONS } from '../data.js';
+import { layoutFrame } from '../frame.js';
+
+// Levels are played on the screen of a computer from their era (see frame.js).
+const ERA_OF = { L1: 'dos', L2: 'y2k', L3: 'cloud', L4: 'ai' };
 import { sfx } from '../audio.js';
 
 // Shared scene plumbing: responsive sizing, era backdrop, modal panels, scene hand-off.
 // Subclasses implement build(data), layout() and optionally onKey(e) / update().
 export default class Base extends Phaser.Scene {
-  get W() { return this.scale.width; }
-  get H() { return this.scale.height; }
+  // Size of this scene's world: the era computer's screen for levels, else the whole canvas.
+  get W() { return this.view ? Math.round(this.view.w) : this.scale.width; }
+  get H() { return this.view ? Math.round(this.view.h) : this.scale.height; }
+
+  // Point the camera at the era computer's screen (levels) or the whole canvas.
+  updateView() {
+    const era = ERA_OF[this.scene.key] || null;
+    this.scene.get('Frame')?.setEra(era);
+    this.view = era ? layoutFrame(this.scale.width, this.scale.height, era) : null;
+    const v = this.view || { x: 0, y: 0, w: this.scale.width, h: this.scale.height };
+    this.cameras.main.setViewport(Math.round(v.x), Math.round(v.y), Math.round(v.w), Math.round(v.h));
+  }
+
+  // Does the DOM mute button (canvas top-right) sit over this scene's screen?
+  get muteOverlap() {
+    const v = this.view;
+    if (!v) return true;
+    const bx = this.scale.width - 54 * DPR;
+    return bx < v.x + v.w && 54 * DPR > v.y;
+  }
   get portrait() { return this.H > this.W; }
   get k() { return DPR * Phaser.Math.Clamp(Math.min(this.W, this.H) / DPR / 420, 0.78, 1.45); }
   s(n) { return n * this.k * (this.fitMul || 1); }
@@ -37,6 +59,7 @@ export default class Base extends Phaser.Scene {
     this.overlayFn = null;
     this.overlayKeys = null;
     this.bgG = null;
+    this.updateView();
     this.input.keyboard.on('keydown', (e) => {
       const f = this.overlayKeys?.[e.key];
       if (f) return f();
@@ -44,7 +67,7 @@ export default class Base extends Phaser.Scene {
     });
     this.build(data);
     this.relayout();
-    const r = () => this.relayout();
+    const r = () => { this.updateView(); this.relayout(); };
     this.scale.on('resize', r);
     this.events.once('shutdown', () => this.scale.off('resize', r));
     const c = Phaser.Display.Color.IntegerToRGB(hex(this.th.bg));
@@ -171,9 +194,12 @@ export default class Base extends Phaser.Scene {
   layoutHud() {
     const fs = this.s(this.th.name === 'dos' ? 22 : 15);
     this.hudL.setPosition(this.s(18), this.top).setFontSize(fs);
-    this.hudT.setOrigin(1, 0).setPosition(this.W - 66 * DPR, this.top).setFontSize(fs);
+    // Keep the timer clear of the mute button when it overlaps the screen.
+    const right = this.muteOverlap ? this.scale.width - 66 * DPR - (this.view?.x || 0) : this.W - this.s(18);
+    this.hudT.setOrigin(1, 0).setPosition(Math.min(right, this.W - this.s(18)), this.top).setFontSize(fs);
     // Content starts below the HUD and the 44px mute button (top-right, ~10px inset).
-    return Math.max(this.top + this.hudL.height + this.s(10), 62 * DPR);
+    const clear = this.muteOverlap ? 62 * DPR - (this.view?.y || 0) : 0;
+    return Math.max(this.top + this.hudL.height + this.s(10), clear);
   }
 
   tickHud() {

@@ -9,6 +9,7 @@ export default class Warp extends Phaser.Scene {
   constructor() { super('Warp'); }
 
   create({ next, from, to }) {
+    this.scene.get('Frame').setEra(null);
     this.next = next;
     this.from = from;
     this.to = to;
