@@ -56,7 +56,7 @@ export default class Level4AIPC extends Base {
     this.phase = 'intro';
     this.timer = INTRO_S;
     this.mg = {
-      lecture: { rx: Phaser.Math.FloatBetween(0.25, 0.8), ry: Phaser.Math.FloatBetween(0.45, 0.75) },
+      lecture: { rx: Phaser.Math.FloatBetween(0.35, 1), ry: Phaser.Math.FloatBetween(0, 1) },
       call: { blur: 0, last: null },
       reel: { px: Phaser.Math.FloatBetween(0.3, 0.7), cut: 0 },
       game: { boost: 0, holding: false, scroll: 0, acc: 0 },
@@ -85,7 +85,7 @@ export default class Level4AIPC extends Base {
     if (id === 'lecture') {
       const b = this.ccBox();
       if (p.x > b.x && p.x < b.x + b.w && p.y > b.y && p.y < b.y + b.h) this.win();
-      else this.nudge();
+      else if (this.inStage(p)) this.nudge();
     } else if (id === 'call' && this.inStage(p)) {
       mg.last = { x: p.x, y: p.y };
     } else if (id === 'reel' && this.inStage(p)) {
@@ -152,7 +152,7 @@ export default class Level4AIPC extends Base {
     sfx('ok');
     const col = ENGINE_COLORS[this.m.engine];
     this.stampT.setText(this.m.done).setColor(col);
-    confetti(this, this.W / 2, this.R.y + this.R.h / 2, [col, '#ffffff', '#00c7fd'], 40);
+    confetti(this, this.R.x + this.R.w / 2, this.R.y + this.R.h / 2, [col, '#ffffff', '#00c7fd'], 40);
     if (this.m.id === 'reel') this.tweens.add({ targets: this.mg, cut: 1, duration: 400 });
     this.settle();
     if (!this.reduced) {
@@ -201,31 +201,55 @@ export default class Level4AIPC extends Base {
     const s = (n) => this.s(n);
     const pad = s(18);
     const y = this.layoutHud();
-    const cw = Math.min(this.W - pad * 2, s(560));
-    const x0 = (this.W - cw) / 2;
-    const tight = this.H / this.k < 470; // short landscape phones
-    this.clockT.setPosition(x0, y).setFontSize(s(tight ? 22 : 30));
-    this.placeT.setPosition(x0, y + s(tight ? 30 : 42)).setFontSize(s(14));
-    const iy = y + s(tight ? 52 : 70);
-    this.instrT.setPosition(this.W / 2, iy).setFontSize(s(tight ? 16 : 18)).setWordWrapWidth(cw, true);
-    const barY = iy + s(tight ? 30 : 66); // room for a two-line instruction
-    this.bar = { x: x0, y: barY, w: cw, h: s(8) };
-    const stageTop = barY + s(16);
-    const stageBottom = this.H - pad - s(30);
-    this.R = { x: x0, y: stageTop, w: cw, h: Math.max(s(150), stageBottom - stageTop) };
-    this.statusT.setPosition(this.W / 2, this.R.y + this.R.h + s(8)).setFontSize(s(13));
-    this.stampT.setPosition(this.W / 2, this.R.y + this.R.h / 2).setFontSize(s(18)).setWordWrapWidth(cw - s(30), true);
+    // Wide screens (the 2026 laptop, landscape phones): header in a left column, play
+    // area on the right. Tall screens: header stacked above the play area.
+    const wide = this.W > this.H * 1.25;
+    if (wide) {
+      const lw = Math.min(this.W * 0.34, s(300));
+      const x0 = pad;
+      this.clockT.setPosition(x0, y).setFontSize(s(28));
+      this.placeT.setPosition(x0, y + s(40)).setFontSize(s(14));
+      this.instrT.setOrigin(0, 0).setAlign('left').setPosition(x0, y + s(68)).setFontSize(s(17)).setWordWrapWidth(lw, true);
+      const barY = y + s(68) + s(17) * 1.3 * 3 + s(12); // room for a three-line instruction
+      this.bar = { x: x0, y: barY, w: lw, h: s(8) };
+      this.statusT.setOrigin(0, 0).setAlign('left').setPosition(x0, barY + s(20)).setFontSize(s(13)).setWordWrapWidth(lw, true);
+      const sx = x0 + lw + s(22);
+      this.R = { x: sx, y, w: this.W - sx - pad, h: Math.max(s(150), this.H - y - pad) };
+    } else {
+      const cw = Math.min(this.W - pad * 2, s(560));
+      const x0 = (this.W - cw) / 2;
+      const tight = this.H / this.k < 470;
+      this.clockT.setPosition(x0, y).setFontSize(s(tight ? 22 : 30));
+      this.placeT.setPosition(x0, y + s(tight ? 30 : 42)).setFontSize(s(14));
+      const iy = y + s(tight ? 52 : 70);
+      this.instrT.setOrigin(0.5, 0).setAlign('center').setPosition(this.W / 2, iy).setFontSize(s(tight ? 16 : 18)).setWordWrapWidth(cw, true);
+      const barY = iy + s(tight ? 30 : 66); // room for a two-line instruction
+      this.bar = { x: x0, y: barY, w: cw, h: s(8) };
+      const stageTop = barY + s(16);
+      this.R = { x: x0, y: stageTop, w: cw, h: Math.max(s(150), this.H - pad - s(30) - stageTop) };
+      this.statusT.setOrigin(0.5, 0).setAlign('center').setPosition(this.W / 2, this.R.y + this.R.h + s(8)).setFontSize(s(13)).setWordWrapWidth(cw, true);
+    }
+    const R = this.R;
+    this.stampT.setPosition(R.x + R.w / 2, R.y + R.h / 2).setFontSize(s(18)).setWordWrapWidth(R.w - s(30), true);
     this.la.setFontSize(s(15));
-    this.lc.setFontSize(s(14)).setWordWrapWidth(cw - s(40), true);
+    this.lc.setFontSize(s(14)).setWordWrapWidth(R.w - s(40), true);
   }
 
+  // CC sits below the speech bubble and right of the lecturer, so it never covers either.
   ccBox() {
     const R = this.R;
-    const w = this.s(96);
-    const h = this.s(60);
+    const s = (n) => this.s(n);
+    const w = s(96);
+    const h = s(60);
     const mg = this.mg;
-    return { x: R.x + mg.rx * (R.w - w), y: R.y + mg.ry * (R.h - h), w, h };
+    const top = this.bubbleY() + s(52);
+    const bottom = R.y + R.h - h - s(12);
+    const left = R.x + R.w * 0.3;
+    const right = R.x + R.w - w - s(12);
+    return { x: left + mg.rx * Math.max(0, right - left), y: top + mg.ry * Math.max(0, bottom - top), w, h };
   }
+
+  bubbleY() { return this.R.y + this.s(24) + this.R.h * 0.34; }
 
   draw(dt) {
     if (!this.R) return;
@@ -237,7 +261,7 @@ export default class Level4AIPC extends Base {
     if (!m) return;
     this.statusT.setText(`Moment ${this.mi + 1} of ${MOMENTS.length}   Wi-Fi off   Battery ${Math.round(this.batt)}%`);
     this.clockT.setText(m.clock);
-    this.placeT.setText(m.place === m.useCase ? m.place : `${m.place}, ${m.useCase.toLowerCase()}`);
+    this.placeT.setText(m.place === m.useCase ? m.place : `${m.place} (${m.useCase})`);
     this.instrT.setText(m.instruction);
     // Timer bar: turns pink in the last third.
     const b = this.bar;
@@ -252,7 +276,7 @@ export default class Level4AIPC extends Base {
       g.fillStyle(0x060d2b, 0.75).fillRoundedRect(R.x, R.y, R.w, R.h, s(22));
       this.la.setVisible(false);
       this.lc.setVisible(false);
-      this.lb.setVisible(true).setText(`${m.verb}!`).setColor('#00c7fd').setFontSize(s(48)).setPosition(this.W / 2, R.y + R.h / 2);
+      this.lb.setVisible(true).setText(`${m.verb}!`).setColor('#00c7fd').setFontSize(s(48)).setPosition(R.x + R.w / 2, R.y + R.h / 2);
     } else if (this.phase === 'result') {
       g.fillStyle(0x060d2b, 0.6).fillRoundedRect(R.x, R.y, R.w, R.h, s(22));
       this.lb.setVisible(false);
@@ -272,7 +296,7 @@ export default class Level4AIPC extends Base {
     // Speech bubble of mumbling.
     const bw = Math.min(s(190), R.w * 0.55);
     const bx = px + s(30);
-    const by = R.y + R.h * 0.42;
+    const by = this.bubbleY();
     g.fillStyle(0xffffff, 0.92).fillRoundedRect(bx, by, bw, s(40), s(14));
     this.la.setVisible(true).setText('mumble mumble NPU…').setColor('#04102e').setPosition(bx + bw / 2, by + s(20));
     if (this.phase !== 'result') {
@@ -285,7 +309,7 @@ export default class Level4AIPC extends Base {
       this.lb.setVisible(true).setText('CC').setColor('#04102e').setPosition(cx, cy);
     } else {
       g.fillStyle(0x000000, 0.85).fillRect(R.x + s(16), R.y + R.h - s(64), R.w - s(32), s(48));
-      this.lc.setVisible(true).setText('“NPUs run AI on very little power.”').setPosition(this.W / 2, R.y + R.h - s(40));
+      this.lc.setVisible(true).setText('“NPUs run AI on very little power.”').setPosition(R.x + R.w / 2, R.y + R.h - s(40));
     }
   }
 
@@ -374,17 +398,28 @@ export default class Level4AIPC extends Base {
   draw_notes(g, s) {
     const { R, mg } = this;
     g.fillStyle(0x0a0f24).fillRect(R.x + s(10), R.y + s(10), R.w - s(20), R.h - s(20));
-    // Laptop whose page fills with summary lines as you mash.
-    const lw = Math.min(R.w * 0.7, s(300));
-    const lh = R.h * 0.58;
-    const lx = R.x + (R.w - lw) / 2;
-    const ly = R.y + R.h * 0.14;
-    g.fillStyle(0x2b2f55).fillRoundedRect(lx, ly, lw, lh, s(10));
-    g.fillStyle(0xf2f6ff).fillRect(lx + s(12), ly + s(12), lw - s(24), lh - s(24));
-    const lines = Math.min(Math.floor((lh - s(40)) / s(16)), Math.round((mg.taps / MASH_NEED) * 7));
-    for (let i = 0; i < lines; i++) g.fillStyle(i === 0 ? 0x00c7fd : 0x9fb0d9).fillRect(lx + s(22), ly + s(24) + i * s(16), (lw - s(44)) * (i === 0 ? 0.5 : 0.65 + (i % 3) * 0.1), s(7));
-    g.fillStyle(0x3a4a80).fillRect(lx - s(14), ly + lh, lw + s(28), s(10));
-    this.la.setVisible(true).setText('Wi-Fi off, AI still on').setColor('#2ef2c8').setPosition(this.W / 2, R.y + R.h - s(24));
+    // A small laptop with true proportions: 16:10 lid on a wider base, sized to the stage.
+    const lw = Math.min(R.w * 0.62, (R.h * 0.55) * 1.6, s(320));
+    const lh = lw / 1.6;
+    const cx = R.x + R.w / 2;
+    const lx = cx - lw / 2;
+    const ly = R.y + (R.h - lh * 1.2) / 2 - s(6);
+    const bz = Math.max(s(5), lw * 0.03);
+    g.fillStyle(0x2b2f55).fillRoundedRect(lx, ly, lw, lh, s(8));
+    g.fillStyle(0xf2f6ff).fillRect(lx + bz, ly + bz, lw - bz * 2, lh - bz * 2);
+    const lineH = Math.max(s(9), (lh - bz * 2) / 9);
+    const maxLines = Math.floor((lh - bz * 2 - lineH) / lineH);
+    const lines = Math.min(maxLines, Math.round((mg.taps / MASH_NEED) * maxLines));
+    for (let i = 0; i < lines; i++) {
+      g.fillStyle(i === 0 ? 0x00c7fd : 0x9fb0d9).fillRect(lx + bz * 2.2, ly + bz + lineH * (i + 0.6), (lw - bz * 4.4) * (i === 0 ? 0.5 : 0.7 + (i % 3) * 0.1), lineH * 0.45);
+    }
+    const bw = lw * 1.14;
+    const bh = lh * 0.1;
+    g.fillStyle(0x3a4a80).fillPoints([
+      { x: cx - lw / 2, y: ly + lh }, { x: cx + lw / 2, y: ly + lh },
+      { x: cx + bw / 2, y: ly + lh + bh }, { x: cx - bw / 2, y: ly + lh + bh },
+    ], true);
+    this.la.setVisible(true).setText('Wi-Fi off, AI still on').setColor('#2ef2c8').setPosition(cx, R.y + R.h - s(24));
     if (this.phase === 'play') this.lc.setVisible(true).setText(`${mg.taps}/${MASH_NEED}`).setPosition(R.x + R.w - s(40), R.y + s(28));
   }
 

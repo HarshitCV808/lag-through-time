@@ -161,36 +161,43 @@ export default class Level3Cloud extends Base {
     drawCard(c.g, this.th, -r.w / 2, -r.h / 2, r.w, r.h, s);
     c.g.fillStyle(hex(this.th.accent)).fillCircle(-r.w / 2 + s(34), -r.h / 2 + s(34), s(14));
     c.g.fillStyle(0xffffff).fillCircle(-r.w / 2 + s(29), -r.h / 2 + s(36), s(5)).fillCircle(-r.w / 2 + s(37), -r.h / 2 + s(33), s(6)).fillCircle(-r.w / 2 + s(41), -r.h / 2 + s(37), s(4));
+    // Type scales with the card so the request always fits inside it.
+    const small = r.h < s(170);
     c.who.setPosition(-r.w / 2 + s(56), -r.h / 2 + s(24)).setFontSize(s(14));
-    c.req.setPosition(-r.w / 2 + s(22), -r.h / 2 + s(64)).setFontSize(s(24)).setWordWrapWidth(r.w - s(44), true);
-    c.tip.setPosition(0, r.h / 2 - s(16)).setFontSize(s(12));
-    c.yes.setPosition(-r.w / 2 + s(22), r.h / 2 - s(84)).setFontSize(s(34));
-    c.no.setPosition(r.w / 2 - s(22), r.h / 2 - s(84)).setFontSize(s(34));
+    c.req.setPosition(-r.w / 2 + s(22), -r.h / 2 + s(small ? 50 : 64)).setFontSize(s(r.h < s(130) ? 17 : small ? 20 : 24)).setWordWrapWidth(r.w - s(44), true);
+    c.tip.setPosition(0, r.h / 2 - s(12)).setFontSize(s(12)).setVisible(r.h > s(150));
+    const stampY = r.h / 2 - Math.min(s(84), r.h * 0.45);
+    c.yes.setPosition(-r.w / 2 + s(22), stampY).setFontSize(s(small ? 26 : 34));
+    c.no.setPosition(r.w / 2 - s(22), stampY).setFontSize(s(small ? 26 : 34));
   }
 
   layout() {
+    // Fixed bands top to bottom, so nothing can collide: app status, request counter,
+    // swipe card (flexes), a reserved two-line answer line, then the Deny / Allow buttons.
     const s = (n) => this.s(n);
-    const pad = s(18);
+    const pad = s(16);
     const y = this.layoutHud();
     const cw = Math.min(this.W - pad * 2, s(460));
-    this.app = { x: (this.W - cw) / 2, y, w: cw, h: s(96) };
+    this.app = { x: (this.W - cw) / 2, y, w: cw, h: s(84) };
     const a = this.app;
-    this.appT.setPosition(a.x + s(18), a.y + s(14)).setFontSize(s(16)).setWordWrapWidth(cw - s(80), true);
-    this.statusT.setPosition(a.x + s(18), a.y + s(40)).setFontSize(s(13));
-    this.pctT.setPosition(a.x + a.w - s(18), a.y + s(40)).setFontSize(s(14));
-    this.bar = { x: a.x + s(18), y: a.y + s(68), w: a.w - s(36), h: s(10) };
-    const btnH = s(56);
+    this.appT.setPosition(a.x + s(16), a.y + s(12)).setFontSize(s(15)).setWordWrapWidth(cw - s(80), true);
+    this.statusT.setPosition(a.x + s(16), a.y + s(36)).setFontSize(s(13));
+    this.pctT.setPosition(a.x + a.w - s(16), a.y + s(36)).setFontSize(s(14));
+    this.bar = { x: a.x + s(16), y: a.y + s(62), w: a.w - s(32), h: s(10) };
+    const btnH = s(52);
     const btnY = this.H - pad - btnH / 2;
     const bw = (cw - s(12)) / 2;
-    this.deny.place(this.W / 2 - bw / 2 - s(6), btnY, bw, btnH, s(18));
-    this.allow.place(this.W / 2 + bw / 2 + s(6), btnY, bw, btnH, s(18));
-    const top = a.y + a.h + s(30);
-    const bottom = btnY - btnH / 2 - s(56);
-    const ch = Math.max(s(170), Math.min(s(this.portrait ? 330 : 250), bottom - top));
-    const cy = top + Math.max(0, (bottom - top - ch) / 2) + ch / 2;
-    this.countT.setPosition(this.W / 2, cy - ch / 2 - s(24)).setFontSize(s(13));
-    this.cardR = { x: this.W / 2, y: cy, w: Math.min(cw, s(400)), h: ch };
-    this.toast.setPosition(this.W / 2, this.cardR.y + ch / 2 + s(10)).setFontSize(s(15)).setWordWrapWidth(cw, true);
+    this.deny.place(this.W / 2 - bw / 2 - s(6), btnY, bw, btnH, s(17));
+    this.allow.place(this.W / 2 + bw / 2 + s(6), btnY, bw, btnH, s(17));
+    const toastH = s(15) * 2.7;
+    const toastTop = btnY - btnH / 2 - s(8) - toastH;
+    this.toast.setPosition(this.W / 2, toastTop).setFontSize(s(14)).setWordWrapWidth(cw, true);
+    const countTop = a.y + a.h + s(8);
+    this.countT.setPosition(this.W / 2, countTop).setFontSize(s(13));
+    const cardTop = countTop + s(22);
+    const room = toastTop - s(8) - cardTop;
+    const ch = Math.max(s(90), Math.min(s(this.portrait ? 330 : 250), room));
+    this.cardR = { x: this.W / 2, y: cardTop + Math.max(0, room - ch) / 2 + ch / 2, w: Math.min(cw, s(400)), h: ch };
     this.placeCard();
   }
 

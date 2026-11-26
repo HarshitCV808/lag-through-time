@@ -171,13 +171,18 @@ export default class Level2Battery extends Base {
     const { W } = this;
     const pad = s(18);
     // Parallax windows on the café wall.
+    // Kept between the top bars and the floor so they never overlap the HUD.
     const winW = s(120);
     const step = s(230);
     const off = (this.scroll * 0.3) % step;
-    for (let x = -off; x < W + step; x += step) {
-      g.fillStyle(0x9fd8dc, 0.35).fillRect(x, this.groundY - s(250), winW, s(130));
-      g.lineStyle(s(4), 0x1f5f64, 0.6).strokeRect(x, this.groundY - s(250), winW, s(130));
-      g.lineBetween(x + winW / 2, this.groundY - s(250), x + winW / 2, this.groundY - s(120));
+    const winTop = Math.max(this.barY + s(56), this.groundY - s(250));
+    const winH = Math.min(s(130), this.groundY - s(36) - winTop);
+    if (winH > s(40)) {
+      for (let x = -off; x < W + step; x += step) {
+        g.fillStyle(0x9fd8dc, 0.35).fillRect(x, winTop, winW, winH);
+        g.lineStyle(s(4), 0x1f5f64, 0.6).strokeRect(x, winTop, winW, winH);
+        g.lineBetween(x + winW / 2, winTop, x + winW / 2, winTop + winH);
+      }
     }
     // Wooden floor with moving planks.
     const floorH = this.H - s(38) - this.groundY;

@@ -9,7 +9,7 @@ const SPEC = {
   dos: { aspect: 4 / 3, bezel: 0.1, below: 0.52 }, // CRT monitor + chin, system unit, keyboard
   y2k: { aspect: 4 / 3, bezel: 0.07, below: 0.3 }, // chunky laptop lid + thick deck
   cloud: { aspect: 16 / 10, bezel: 0.04, below: 0.24 }, // thin aluminium laptop
-  ai: { aspect: 16 / 10, bezel: 0.025, below: 0.22 }, // near-borderless 2026 laptop
+  ai: { aspect: 3 / 2, bezel: 0.025, below: 0.2 }, // near-borderless 2026 laptop, taller 3:2 screen
 };
 
 export function layoutFrame(W, H, era) {

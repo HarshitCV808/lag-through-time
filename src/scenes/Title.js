@@ -46,9 +46,17 @@ export default class Title extends Base {
     }
   }
 
+  // Restyle only the title text (no relayout), so a tap on Start is never lost mid-flicker.
   attract() {
     if (this.morph !== 3 || this.leaving) return;
-    [0, 1, 2, null].forEach((era, i) => this.time.delayedCall(i * 240, () => { this.flash = era; this.relayout(); }));
+    [0, 1, 2, null].forEach((era, i) => this.time.delayedCall(i * 240, () => { this.flash = era; this.applyFlash(); }));
+  }
+
+  applyFlash() {
+    const t = this.titleText;
+    if (!t?.active) return;
+    if (this.flash === null) t.setFontFamily(this.th.font).setColor(this.th.ink);
+    else t.setFontFamily(ERAS[this.flash].th.font).setColor(FLASH_INK[this.flash]);
   }
 
   layout() {
@@ -70,10 +78,8 @@ export default class Title extends Base {
     });
     root.add(title);
     y += title.height + s(22);
-    // Attract flicker: restyle the title only, measured in its settled font so nothing jumps.
-    if (this.flash !== null && settled) {
-      title.setFontFamily(ERAS[this.flash].th.font).setColor(FLASH_INK[this.flash]);
-    }
+    this.titleText = title;
+    if (settled) this.applyFlash();
 
     // Era timeline: these really are a sequence, so they get a connecting line.
     const g = this.add.graphics();

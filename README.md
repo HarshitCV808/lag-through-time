@@ -15,7 +15,7 @@ Every level is played **on the screen of a computer from its era, in a room from
 | 1981 | Beige CRT desktop with floppy drives and a clicky keyboard | Wood-panelled study, desk lamp, 1981 calendar |
 | 2003 | Chunky grey laptop | College hostel: blinds, posters, bookshelf |
 | 2015 | Thin aluminium laptop | Café: brick wall, chalk menu, pendant lamps, coffee |
-| 2026 | Near-borderless AI PC with glowing keys | Night-time room: neon strip, city window, plant |
+| 2026 | Near-borderless 3:2 AI PC with glowing keys | Night-time room: neon strip, city window, plant |
 
 On laptop and kiosk screens (and wide landscape) the whole desk scene shows. Upright phones and short landscape phones get a slim era-coloured bezel instead, so the game stays big enough to play.
 

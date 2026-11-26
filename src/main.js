@@ -37,7 +37,8 @@ const syncMute = () => {
   muteBtn.setAttribute('aria-pressed', String(!isMuted()));
   muteBtn.setAttribute('aria-label', isMuted() ? 'Turn sound on' : 'Turn sound off');
 };
-muteBtn.addEventListener('click', () => { setMuted(!isMuted()); syncMute(); });
+// Blur after clicking so Space / Enter go to the game, not back to the mute button.
+muteBtn.addEventListener('click', () => { setMuted(!isMuted()); syncMute(); muteBtn.blur(); });
 syncMute();
 // First tap or key anywhere starts the audio (browser autoplay rule).
 const firstGesture = () => {
@@ -69,6 +70,10 @@ addEventListener('keydown', firstGesture, true);
     render: { roundPixels: true, antialias: true }, // whole-pixel positions keep text sharp
     scene: [Frame, Title, Warp, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result],
   });
+  // Always clip each scene to its camera viewport, so a level never draws outside its
+  // era computer's screen. Phaser only clips while an internal "custom viewports" counter
+  // is above 0, and that counter can drift to 0 across window resizes / phone rotation.
+  Object.defineProperty(game.scene, 'customViewports', { get: () => 1, set: () => {} });
   addEventListener('resize', () => {
     game.scale.resize(...size());
     game.scale.setZoom(1 / DPR);
