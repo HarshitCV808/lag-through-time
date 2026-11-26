@@ -149,12 +149,20 @@ export function ambience(name) {
 
 export const isMuted = () => muted;
 
+// Called on user gestures until audio is actually running. Browsers only allow audio to
+// start inside a real gesture (on phones that's the finger lifting, not pointerdown), and
+// older iPhones also need a sound played inside that gesture, hence the silent sample.
 export function unlock() {
   ensure();
-  ctx.resume();
-  if (!loop) startLoop();
-  if (!amb) startAmb();
+  if (ctx.state === 'running') return;
+  const src = ctx.createBufferSource();
+  src.buffer = ctx.createBuffer(1, 1, 22050);
+  src.connect(ctx.destination);
+  src.start(0);
+  ctx.resume().then(() => { startLoop(); startAmb(); }).catch(() => {});
 }
+
+export const audioRunning = () => ctx?.state === 'running';
 
 export function setMuted(m) {
   muted = m;

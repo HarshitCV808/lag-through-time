@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { DPR } from './theme.js';
-import { isMuted, setMuted, unlock } from './audio.js';
+import { isMuted, setMuted, unlock, audioRunning } from './audio.js';
 import Title from './scenes/Title.js';
 import Level1Dos from './scenes/Level1Dos.js';
 import Level2Battery from './scenes/Level2Battery.js';
@@ -41,14 +41,17 @@ const syncMute = () => {
 // Blur after clicking so Space / Enter go to the game, not back to the mute button.
 muteBtn.addEventListener('click', () => { setMuted(!isMuted()); syncMute(); muteBtn.blur(); });
 syncMute();
-// First tap or key anywhere starts the audio (browser autoplay rule).
-const firstGesture = () => {
+// Sound is on by default, but browsers only let audio start inside a real user gesture.
+// Try on every kind of gesture (on touch screens only the finger lifting counts) and stop
+// listening only once audio is actually running.
+const GESTURES = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'];
+const tryUnlock = () => {
   unlock();
-  removeEventListener('pointerdown', firstGesture, true);
-  removeEventListener('keydown', firstGesture, true);
+  setTimeout(() => {
+    if (audioRunning()) GESTURES.forEach((ev) => removeEventListener(ev, tryUnlock, true));
+  }, 0);
 };
-addEventListener('pointerdown', firstGesture, true);
-addEventListener('keydown', firstGesture, true);
+GESTURES.forEach((ev) => addEventListener(ev, tryUnlock, true));
 
 (async () => {
   // Canvas text needs fonts loaded first; don't hang the kiosk if the network is slow.
@@ -79,7 +82,8 @@ addEventListener('keydown', firstGesture, true);
     game.scale.resize(...size());
     game.scale.setZoom(1 / DPR);
   });
-  window.__game = game; // debug handle
+  window.__game = game; // debug handles
+  window.__audioRunning = audioRunning;
 
   // Kiosk: if a shopper walks away mid-game, return to the title after 90 s without input.
   // (A phone that opened a saved match link is left alone.)
