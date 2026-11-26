@@ -74,7 +74,7 @@ export default class Level3Cloud extends Base {
     const c = (this.card = this.add.container(0, 0).setDepth(10));
     c.perm = p;
     c.g = this.add.graphics();
-    c.who = this.add.text(0, 0, 'CloudAI wants to:', { fontFamily: 'Figtree', fontStyle: '700', color: this.th.dim });
+    c.who = this.add.text(0, 0, 'Cloud AI wants to:', { fontFamily: 'Figtree', fontStyle: '700', color: this.th.dim });
     c.req = this.add.text(0, 0, p.text, { fontFamily: 'Figtree', fontStyle: '800', color: this.th.ink, wordWrap: { width: 4000, useAdvancedWrap: true } });
     c.tip = this.add.text(0, 0, 'Swipe right to allow, left to deny', { fontFamily: 'Figtree', fontStyle: '500', color: this.th.dim }).setOrigin(0.5, 1);
     c.yes = this.add.text(0, 0, 'ALLOW', { fontFamily: 'Figtree', fontStyle: '800', color: '#1f9d55' }).setAngle(-12).setAlpha(0);

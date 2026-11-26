@@ -11,11 +11,13 @@ import Result from './scenes/Result.js';
 import Warp from './scenes/Warp.js';
 import Frame from './scenes/Frame.js';
 import Glass from './scenes/Glass.js';
+import Splash from './scenes/Splash.js';
+import Fx from './scenes/Fx.js';
 
 const FONTS = [
   '20px VT323', '400 20px Silkscreen', '700 20px Silkscreen',
   '500 20px Figtree', '700 20px Figtree', '800 20px Figtree',
-  '600 20px Unbounded', '800 20px Unbounded', '500 20px Manrope', '700 20px Manrope',
+  '600 20px Unbounded', '800 20px Unbounded', '500 20px Manrope', '700 20px Manrope', '800 20px Manrope',
 ];
 
 // Crisp text: whole-pixel font sizes everywhere, and the Silkscreen pixel font only at
@@ -26,9 +28,17 @@ const crispSize = (size, family = '') => {
 };
 const TextStyle = Phaser.GameObjects.TextStyle.prototype;
 const setStyle = TextStyle.setStyle;
+// VT323 ships in one weight only; asking for bold makes the browser smear its pixels.
+const singleWeight = (family = '') => /VT323/.test(family);
 TextStyle.setStyle = function (style, ...rest) {
   if (style && typeof style.fontSize === 'number') style = { ...style, fontSize: crispSize(style.fontSize, style.fontFamily) };
+  if (style && singleWeight(style.fontFamily)) style = { ...style, fontStyle: '' };
   return setStyle.call(this, style, ...rest);
+};
+const setFontFamily = TextStyle.setFontFamily;
+TextStyle.setFontFamily = function (family) {
+  if (singleWeight(family)) this.fontStyle = '';
+  return setFontFamily.call(this, family);
 };
 const setFontSize = TextStyle.setFontSize;
 TextStyle.setFontSize = function (size) { return setFontSize.call(this, crispSize(size, this.fontFamily)); };
@@ -72,7 +82,7 @@ GESTURES.forEach((ev) => addEventListener(ev, tryUnlock, true));
     scale: { mode: Phaser.Scale.NONE, width: w, height: h, zoom: 1 / DPR },
     input: { activePointers: 2 },
     render: { roundPixels: true, antialias: true }, // whole-pixel positions keep text sharp
-    scene: [Frame, Title, Warp, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result, Glass],
+    scene: [Frame, Splash, Title, Warp, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result, Glass, Fx],
   });
   // Always clip each scene to its camera viewport, so a level never draws outside its
   // era computer's screen. Phaser only clips while an internal "custom viewports" counter
@@ -93,7 +103,7 @@ GESTURES.forEach((ev) => addEventListener(ev, tryUnlock, true));
   addEventListener('keydown', touch, true);
   setInterval(() => {
     const scene = game.scene.getScenes(true).find((s) => s.scene.key !== 'Frame');
-    if (!scene || scene.scene.key === 'Title' || scene.fromLink) return;
+    if (!scene || ['Title', 'Splash'].includes(scene.scene.key) || scene.fromLink) return;
     if (Date.now() - lastInput > 90000) { touch(); scene.scene.start('Title'); }
   }, 5000);
 })();

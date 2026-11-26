@@ -15,7 +15,7 @@ const ERAS = [
 const FLASH_INK = ['#3dff7a', '#ffffff', '#8fb8ff'];
 
 export default class Title extends Base {
-  constructor() { super({ key: 'Title', active: true }); }
+  constructor() { super('Title'); }
 
   build() {
     // QR / share link (?s=scores&b=budget, or older ?match=laptop): open straight on that result, once per page load.
