@@ -78,11 +78,22 @@ function room1981(g, addText, W, H, deskY) {
   g.fillStyle(0xf3ead2).fillRect(W * 0.84, H * 0.1, W * 0.09, H * 0.14);
   g.fillStyle(0xb3261e).fillRect(W * 0.84, H * 0.1, W * 0.09, H * 0.035);
   addText(W * 0.885, H * 0.185, '1981', { fontFamily: 'VT323', fontSize: Math.round(H * 0.045), color: '#2b1a0e' }).setOrigin(0.5);
-  // Desk lamp.
-  g.lineStyle(Math.max(3, W / 300), 0x2b2b2b).lineBetween(W * 0.88, deskY, W * 0.9, deskY - H * 0.22).lineBetween(W * 0.9, deskY - H * 0.22, W * 0.84, deskY - H * 0.3);
-  g.fillStyle(0x2e5d3a).fillTriangle(W * 0.8, deskY - H * 0.26, W * 0.88, deskY - H * 0.34, W * 0.86, deskY - H * 0.24);
-  g.fillStyle(0xffe9a8, 0.18).fillCircle(W * 0.82, deskY - H * 0.2, H * 0.14);
   desk(g, W, H, deskY, 0x4a2f1b, 0x2e1c10);
+  // Desk lamp (drawn after the desk so it stands on it): weighted base, two-part arm,
+  // green shade angled down, soft light cone and a warm pool on the desk.
+  const u = H * 0.01;
+  const lx = W * 0.915;
+  const elbow = { x: lx + u * 3, y: deskY - u * 17 };
+  const head = { x: lx - u * 4, y: deskY - u * 26 };
+  g.fillStyle(0xffe9a8, 0.1).fillTriangle(head.x - u * 3, head.y + u * 3, head.x - u * 15, deskY, head.x + u * 5, deskY);
+  g.fillStyle(0xffe9a8, 0.16).fillEllipse(head.x - u * 5, deskY + u * 1.5, u * 22, u * 4);
+  g.lineStyle(Math.max(3, u * 0.8), 0x2b2b2b).lineBetween(lx, deskY - u, elbow.x, elbow.y).lineBetween(elbow.x, elbow.y, head.x, head.y);
+  g.fillStyle(0x2b2b2b).fillCircle(elbow.x, elbow.y, u * 0.9).fillEllipse(lx, deskY - u * 0.6, u * 10, u * 2.6);
+  g.fillStyle(0x2e5d3a).fillPoints([
+    { x: head.x - u * 1, y: head.y - u * 2 }, { x: head.x + u * 3, y: head.y - u * 0.5 },
+    { x: head.x + u * 1, y: head.y + u * 4.5 }, { x: head.x - u * 7.5, y: head.y + u * 3 },
+  ], true);
+  g.fillStyle(0xfff3c4, 0.95).fillCircle(head.x - u * 3, head.y + u * 3.6, u * 1.2);
 }
 
 function room2003(g, addText, W, H, deskY) {

@@ -100,7 +100,7 @@ export default class Title extends Base {
     y += s(64);
 
     if (settled) {
-      const sub = this.add.text(-cw / 2, y, 'Play through 45 years of laptops in about 3 minutes, and find the one that never makes you wait.', {
+      const sub = this.add.text(-cw / 2, y, 'Play through 45 years of laptops in about 3 minutes, and find the Intel AI PC that never makes you wait.', {
         fontFamily: th.body, fontStyle: '500', fontSize: s(18), color: th.dim,
         wordWrap: { width: cw, useAdvancedWrap: true }, lineSpacing: s(6),
       });
