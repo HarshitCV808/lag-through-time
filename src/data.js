@@ -90,7 +90,7 @@ export const MOMENTS = [
   {
     id: 'notes', clock: '11:30 PM', place: 'Exam night', useCase: 'Everyday',
     verb: 'MASH', instruction: 'Mash to summarise 40 pages, offline', engine: 'NPU',
-    done: 'Notes summarised on-device. No Wi-Fi, nothing uploaded', short: 'Notes summary (NPU)',
+    done: 'Notes summarised on-device by the NPU or GPU, depending on the app. No Wi-Fi, nothing uploaded', short: 'Notes summary (NPU or GPU)',
   },
 ];
 
