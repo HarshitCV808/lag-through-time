@@ -36,8 +36,8 @@ export default class Pause extends Base {
         { label: 'Restart level', onClick: () => this.restart() },
         { label: 'Quit to title', onClick: () => this.quit() },
       ],
+      keys: { Enter: () => this.resume(), Escape: () => this.resume() },
     });
-    Object.assign(this.overlayKeys, { Enter: () => this.resume(), Escape: () => this.resume() });
   }
 
   resume() {

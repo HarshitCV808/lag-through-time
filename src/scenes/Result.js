@@ -104,7 +104,7 @@ export default class Result extends Base {
         .map(([k, v]) => [k, Math.round((v / total) * 100)]);
       // Rounding can drift to 99% or 101%; the top persona absorbs the difference.
       if (parts.length) parts[0][1] += 100 - parts.reduce((t, [, p]) => t + p, 0);
-      const mix = parts.slice(0, 3).map(([k, p]) => `${p}% ${SHORT[k]}`).join(', ');
+      const mix = parts.map(([k, p]) => `${p}% ${SHORT[k]}`).join(', ');
       if (mix) y += text(-cw / 2, y, `Your mix: ${mix}`, 14, { weight: '700', color: th.accent }).height;
     }
     y += s(16);

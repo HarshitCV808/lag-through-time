@@ -203,7 +203,7 @@ export default class Base extends Phaser.Scene {
   ask(opts) {
     this.showOverlay(() => {
       const btns = opts.buttons.map((b) => ({ ...b, onClick: () => { this.hideOverlay(); b.onClick(); } }));
-      const keys = {};
+      const keys = { ...opts.keys }; // extra shortcuts survive every relayout
       if (btns.length === 1) keys.Enter = keys[' '] = btns[0].onClick;
       else btns.forEach((b, i) => (keys[String(i + 1)] = b.onClick));
       this.overlayKeys = keys;
