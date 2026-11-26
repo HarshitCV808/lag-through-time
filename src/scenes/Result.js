@@ -6,6 +6,8 @@ import qrcode from 'qrcode-generator';
 import { LAPTOPS, PERSONAS, PRICE_NOTE, BUDGETS, recommend, personaOf, rupees, shareQuery } from '../data.js';
 
 const SHORT = { student: 'Student', creator: 'Creator', gamer: 'Gamer', pro: 'Hustler' };
+// What each persona really needs, for the honest heads-up when the budget can't deliver it.
+const NEED = { student: 'student life', creator: 'heavy editing', gamer: 'serious gaming', pro: 'heavy work' };
 
 
 export default class Result extends Base {
@@ -21,18 +23,20 @@ export default class Result extends Base {
     if (data?.share) {
       this.budget = BUDGETS.find((b) => b.id === data.share.budget && b.id !== 'any') || null;
       const rec = recommend([data.share.scores], data.share.budget);
-      Object.assign(this, { laptop: rec.best, runnerUp: rec.runnerUp, persona: rec.persona, scores: rec.scores });
+      Object.assign(this, { laptop: rec.best, runnerUp: rec.runnerUp, persona: rec.persona, scores: rec.scores, weak: rec.weak, saves: rec.saves });
     } else if (this.fromLink) {
       // Older links that only named a laptop.
       this.laptop = { id: data.match, ...LAPTOPS[data.match] };
       this.persona = personaOf(data.match);
       this.runnerUp = null;
+      this.weak = false;
+      this.saves = false;
       this.scores = null;
       this.budget = null;
     } else {
       this.budget = BUDGETS.find((b) => b.id === this.registry.get('budget') && b.id !== 'any') || null;
       const rec = recommend(this.registry.get('answers') || [], this.budget?.id || 'any');
-      Object.assign(this, { laptop: rec.best, runnerUp: rec.runnerUp, persona: rec.persona, scores: rec.scores });
+      Object.assign(this, { laptop: rec.best, runnerUp: rec.runnerUp, persona: rec.persona, scores: rec.scores, weak: rec.weak, saves: rec.saves });
     }
     this.link = this.scores
       ? `${location.origin}${location.pathname}?${shareQuery(this.scores, this.budget?.id)}`
@@ -113,13 +117,14 @@ export default class Result extends Base {
     let cy = cardTop + ip;
     const parts = [];
     const ctext = (str, fs, opts) => { const t = text(-cw / 2 + ip, cy, str, fs, { wrap: cw - ip * 2, ...opts }); parts.push(t); cy += t.height; return t; };
-    ctext(this.budget ? `Your best match, ${this.budget.label.toLowerCase()}` : 'Your Intel AI PC match', 14, { weight: '700', color: th.accent }); cy += s(6);
+    ctext(this.budget && !this.saves ? `Your best match, ${this.budget.label.toLowerCase()}` : 'Your Intel AI PC match', 14, { weight: '700', color: th.accent }); cy += s(6);
     ctext(L.model, 22, { font: 'Unbounded', weight: '800' }); cy += s(6);
     ctext(L.chip, 16, { weight: '700' }); cy += s(2);
     ctext(L.specs, 15, { color: th.dim }); cy += s(12);
     const priceT = ctext(rupees(L.price), 30, { font: 'Unbounded', weight: '800', color: th.accent }); cy += s(4);
     ctext(PRICE_NOTE, 12, { color: th.dim }); cy += s(14);
-    L.why.forEach((w) => {
+    // First reason is written for this shopper's persona, then general facts.
+    [L.fit?.[this.persona], ...L.why].filter(Boolean).forEach((w) => {
       g.fillStyle(0x2ef2c8).fillRect(-cw / 2 + ip, cy + s(8), s(8), s(8));
       const t = text(-cw / 2 + ip + s(20), cy, w, 15, { wrap: cw - ip * 2 - s(20) });
       cy += t.height + s(8);
@@ -127,6 +132,16 @@ export default class Result extends Base {
     cy += ip - s(8);
     drawCard(cardG, th, -cw / 2, cardTop, cw, cy - cardTop, s);
     y = cy + s(14);
+
+    // Honest notes: a cheaper laptop fits better than anything in the budget, or nothing
+    // in the budget is built for what they need.
+    if (this.saves) {
+      y += text(-cw / 2, y, `Good news: you don't need to spend that much on ${NEED[this.persona]}. This one fits you better and costs less.`, 14, { weight: '700', color: '#2ef2c8' }).height + s(12);
+    } else if (this.weak) {
+      const where = this.budget ? this.budget.phrase : 'in this line-up';
+      const next = this.runnerUp?.tag === 'Worth stretching for' ? 'The one below is worth stretching for.' : 'This is the closest match.';
+      y += text(-cw / 2, y, `Heads-up: no Intel AI PC ${where} is built for ${NEED[this.persona]} yet. ${next}`, 14, { weight: '700', color: '#ffc145' }).height + s(12);
+    }
 
     // Runner-up: a better pick just above budget, or the next best inside it.
     if (this.runnerUp) {

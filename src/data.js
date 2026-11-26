@@ -46,9 +46,10 @@ export const QUESTIONS = {
 };
 
 export const BUDGETS = [
-  { id: 'low', label: 'Under ₹1.5 lakh', min: 0, max: 150000 },
-  { id: 'mid', label: '₹1.5 to 2.5 lakh', min: 150000, max: 250000 },
-  { id: 'high', label: 'Above ₹2.5 lakh', min: 250000, max: Infinity },
+  { id: 'low', label: 'Under ₹1.5 lakh', phrase: 'under ₹1.5 lakh', min: 0, max: 150000 },
+  { id: 'mid', label: '₹1.5 to 2 lakh', phrase: 'between ₹1.5 and 2 lakh', min: 150000, max: 200000 },
+  { id: 'upper', label: '₹2 to 3 lakh', phrase: 'between ₹2 and 3 lakh', min: 200000, max: 300000 },
+  { id: 'high', label: 'Above ₹3 lakh', phrase: 'above ₹3 lakh', min: 300000, max: Infinity },
   { id: 'any', label: 'Show me the best fit', min: 0, max: Infinity },
 ];
 
@@ -103,56 +104,68 @@ export const PERSONAS = {
 
 // Real Intel Core Ultra Series 3 laptops listed in India. w = how well it fits each persona (0–3).
 // Prices as listed on smartprix.com on 25 Nov 2026.
+// w = how well it suits each persona (0 = not at all, 3 = made for it).
+// fit = the first reason shown, written for the shopper's persona. why = general facts.
 export const LAPTOPS = {
   'ideapad-slim-3': {
     model: 'Lenovo IdeaPad Slim 3 14', chip: 'Intel Core Ultra 5 322', specs: '14-inch, 16 GB, 512 GB SSD', price: 109990,
-    w: { student: 3, pro: 1, creator: 1, gamer: 0 },
-    why: ['Built-in NPU for offline captions and note summaries', '16 GB memory for multitasking through college', 'The best-value Intel AI PC in this line-up'],
+    w: { student: 3, pro: 1, creator: 1, gamer: 0.5 },
+    fit: { student: 'Light and affordable for full college days', pro: 'Handles office apps and video calls', creator: 'Fine for light photo edits and social posts', gamer: 'Casual and cloud gaming only; no gaming graphics' },
+    why: ['Built-in NPU runs captions and AI features offline', 'Best-value Intel AI PC in this line-up'],
   },
   'thinkpad-e16': {
     model: 'Lenovo ThinkPad E16 Gen 4', chip: 'Intel Core Ultra 7 355', specs: '16-inch, 16 GB, 512 GB SSD', price: 138991,
-    w: { student: 2, pro: 3, creator: 1, gamer: 0 },
-    why: ['Big 16-inch screen for spreadsheets and code', 'ThinkPad keyboard made for long typing days', 'NPU handles call blur and noise removal'],
+    w: { student: 2, pro: 3, creator: 1, gamer: 0.5 },
+    fit: { student: 'Big 16-inch screen for notes, code and assignments', pro: 'Business-grade ThinkPad keyboard for long work days', creator: 'Big screen for light editing', gamer: 'Casual games only; no gaming graphics' },
+    why: ['NPU handles call blur and noise removal', 'Core Ultra 7 for smooth multitasking'],
   },
   'yoga-7-2in1': {
     model: 'Lenovo Yoga 7 2-in-1', chip: 'Intel Core Ultra 5 322 (Intel Evo)', specs: '2-in-1 touch, 16 GB, 512 GB SSD', price: 160990,
     w: { student: 3, pro: 1, creator: 2, gamer: 0 },
-    why: ['Folds into a tablet for handwritten notes', 'Intel Evo design, tested for responsiveness and battery', 'NPU runs live captions without internet'],
+    fit: { student: 'Flips into a tablet for handwritten notes', pro: 'Tablet mode for sketching ideas in meetings', creator: 'Touch screen for sketching and photo touch-ups', gamer: 'Casual games only; no gaming graphics' },
+    why: ['Intel Evo design, tested for responsiveness and battery', 'NPU runs live captions without internet'],
   },
   'zenbook-s14': {
     model: 'ASUS Zenbook S14 (2026)', chip: 'Intel Core Ultra 7 355', specs: '14-inch, 16 GB, 512 GB SSD', price: 171990,
-    w: { student: 2, pro: 2, creator: 2, gamer: 0 },
-    why: ['Thin and light, made to carry everywhere', 'NPU keeps AI features running all day', 'Premium build that lasts for years'],
+    w: { student: 2, pro: 2, creator: 2, gamer: 0.5 },
+    fit: { student: 'Thin, light and premium for campus', pro: 'Light enough for every commute and client visit', creator: 'Portable for photo edits on the go', gamer: 'Casual games only; no gaming graphics' },
+    why: ['NPU keeps AI features running all day', 'Premium build that lasts for years'],
   },
   'expertbook-p5': {
     model: 'ASUS ExpertBook P5', chip: 'Intel Core Ultra 7 356H', specs: '16-inch, 32 GB, 1 TB SSD', price: 179990,
-    w: { student: 1, pro: 3, creator: 1, gamer: 1 },
-    why: ['32 GB memory for heavy multitasking', 'Core Ultra 7 H-series for demanding work apps', 'Client files stay on the device with on-device AI'],
+    w: { student: 1, pro: 3, creator: 1.5, gamer: 1 },
+    fit: { student: 'H-series power for heavy coursework', pro: '32 GB memory for heavy multitasking', creator: 'H-series chip and 32 GB for bigger edits', gamer: 'Light gaming on built-in Intel graphics' },
+    why: ['1 TB storage for big projects', 'Client files stay on the device with on-device AI'],
   },
   'zenbook-14': {
     model: 'ASUS Zenbook 14 (2026)', chip: 'Intel Core Ultra 9 386H', specs: '14-inch 2880×1800 touch, 16 GB, 512 GB SSD', price: 184990,
-    w: { student: 1, pro: 1, creator: 3, gamer: 2 },
-    why: ['Core Ultra 9 for fast AI photo and video edits', 'Sharp 2.8K touch screen for editing', 'Your raw files stay on your laptop'],
+    w: { student: 1, pro: 1, creator: 3, gamer: 1.5 },
+    fit: { student: 'Fast Core Ultra 9 for demanding projects', pro: 'Sharp 2.8K screen for long work days', creator: 'Sharp 2.8K touch screen made for editing', gamer: 'Light gaming with XeSS upscaling on Intel graphics' },
+    why: ['Core Ultra 9 for fast AI photo and video edits', 'Your raw files stay on your laptop'],
   },
   'yoga-pro-7i': {
     model: 'Lenovo Yoga Pro 7i Gen 11', chip: 'Intel Core Ultra 7 356H + RTX 5050', specs: '15.3-inch 2560×1600, 32 GB, 1 TB SSD', price: 254491,
-    w: { student: 0, pro: 1, creator: 3, gamer: 3 },
-    why: ['Core Ultra 7 with a dedicated RTX 5050 for real gaming', 'Windows games and anti-cheat run natively on x86', 'NPU handles stream blur and mic clean-up while you play'],
+    w: { student: 0.5, pro: 1, creator: 3, gamer: 3 },
+    fit: { student: 'Powerful, but more than most coursework needs', pro: 'RTX graphics for heavy work apps', creator: 'RTX 5050 and Core Ultra 7 for fast video editing', gamer: 'Dedicated RTX 5050 graphics for real gaming' },
+    why: ['Windows games and anti-cheat run natively on x86', 'NPU handles stream blur and mic clean-up'],
   },
   'expertbook-ultra': {
     model: 'ASUS ExpertBook Ultra (2026)', chip: 'Intel Core Ultra X7 358H', specs: '14-inch touch, 32 GB, 1 TB SSD', price: 269990,
-    w: { student: 0, pro: 3, creator: 2, gamer: 1 },
-    why: ['Core Ultra X7 with Intel Arc graphics and 32 GB memory', 'Call blur, noise removal and captions on the NPU', 'Client files never leave the device'],
+    w: { student: 0.5, pro: 3, creator: 2, gamer: 1.5 },
+    fit: { student: 'Premium, but more than most coursework needs', pro: 'Core Ultra X7 and 32 GB for demanding work', creator: 'Intel Arc graphics for creative AI', gamer: 'Intel Arc graphics for smooth casual gaming' },
+    why: ['Call blur, noise removal and captions on the NPU', 'Client files never leave the device'],
   },
   'omnibook-7': {
     model: 'HP OmniBook 7 14', chip: 'Intel Core Ultra X7 358H', specs: '14-inch, 32 GB, 1 TB SSD', price: 274990,
     w: { student: 1, pro: 2, creator: 3, gamer: 2 },
-    why: ['Core Ultra X7 with Intel Arc graphics for creative AI', '32 GB and 1 TB for big projects', 'Light enough to edit anywhere, even offline'],
+    fit: { student: 'Powerful and light for big projects', pro: '32 GB and 1 TB for heavy work', creator: 'Intel Arc graphics, 32 GB and 1 TB for big creative projects', gamer: 'Intel Arc graphics with XeSS for smooth gaming in a thin laptop' },
+    why: ['Light enough to edit anywhere, even offline', 'NPU runs AI features without draining the battery'],
   },
   'zephyrus-g16': {
     model: 'ASUS ROG Zephyrus G16 (2026)', chip: 'Intel Core Ultra 9 386H + RTX 5080', specs: '16-inch 2560×1600, 32 GB, 2 TB SSD', price: 529990,
-    w: { student: 0, pro: 0, creator: 2, gamer: 4 },
-    why: ['Core Ultra 9 with an RTX 5080 for top-tier gaming', 'Windows games and anti-cheat run natively on x86', 'NPU handles stream blur and mic clean-up, so the GPU stays on frames'],
+    w: { student: 0, pro: 0.5, creator: 2.5, gamer: 3.5 },
+    fit: { student: 'Far more power than coursework needs', pro: 'Desktop-class power, but heavy to carry', creator: 'RTX 5080 for heavy 3D and video work', gamer: 'RTX 5080 for top-tier gaming at high settings' },
+    why: ['Windows games and anti-cheat run natively on x86', 'NPU handles stream blur and mic clean-up, so the GPU stays on frames'],
   },
 };
 
@@ -171,25 +184,40 @@ export function topPersona(scores) {
   return Object.keys(scores).reduce((a, b) => (scores[b] > scores[a] ? b : a), 'student');
 }
 
-const fit = (laptop, scores) => Object.entries(scores).reduce((t, [p, v]) => t + v * (laptop.w[p] || 0), 0);
+// Persona shares (they sum to 1), so a mix of answers is weighed fairly.
+const shares = (scores) => {
+  const total = Object.values(scores).reduce((a, b) => a + b, 0) || 1;
+  return Object.fromEntries(Object.entries(scores).map(([k, v]) => [k, v / total]));
+};
+const fitOf = (laptop, sh) => Object.entries(sh).reduce((t, [p, v]) => t + v * (laptop.w[p] || 0), 0);
+const NEAR_TIE = 0.15; // fits this close count as equal; then the cheaper laptop wins
 
-// Best laptop inside the budget, plus a runner-up: a clearly better pick above budget
-// ("worth stretching for"), otherwise the next best inside the budget.
+// Best laptop inside the budget, a runner-up, and whether the budget really suits the
+// shopper's main persona (if not, the result screen says so honestly).
 export function recommend(answers, budgetId = 'any') {
   const scores = personaScores(answers);
-  const b = BUDGETS.find((x) => x.id === budgetId) || BUDGETS[3];
-  const ranked = Object.entries(LAPTOPS)
-    .map(([id, l]) => ({ id, ...l, score: fit(l, scores) }))
-    .sort((x, y) => y.score - x.score || x.price - y.price);
-  const inBudget = ranked.filter((l) => l.price >= b.min && l.price < b.max);
-  const pool = inBudget.length ? inBudget : ranked;
-  const best = pool[0];
-  // A realistic stretch: at most 30% over the top of the budget.
-  const stretch = ranked.find((l) => l.price >= b.max && l.price <= b.max * 1.3 && l.score > best.score * 1.2);
-  const runnerUp = stretch
-    ? { ...stretch, tag: 'Worth stretching for' }
-    : pool[1] && { ...pool[1], tag: 'Also a great fit' };
-  return { best, runnerUp, persona: topPersona(scores), scores };
+  const persona = topPersona(scores);
+  const sh = shares(scores);
+  const b = BUDGETS.find((x) => x.id === budgetId) || BUDGETS.find((x) => x.id === 'any');
+  // "Best fit" with no budget weighs value: a little penalty per lakh, so ₹5 lakh only
+  // wins when it is clearly the better fit.
+  const valuePenalty = (l) => (b.id === 'any' ? (l.price / 100000) * 0.04 : 0);
+  const all = Object.entries(LAPTOPS).map(([id, l]) => ({ id, ...l, score: fitOf(l, sh) - valuePenalty(l) }));
+  // Near-ties go to the cheaper laptop (or the pricier one, when they already chose to spend less).
+  const rank = (list, cheapFirst = true) => [...list].sort((x, y) => (Math.abs(y.score - x.score) <= NEAR_TIE ? (cheapFirst ? x.price - y.price : y.price - x.price) : y.score - x.score));
+  const inBudget = all.filter((l) => l.price >= b.min && l.price < b.max);
+  const pool = rank(inBudget.length ? inBudget : all);
+  // Budget is what they can spend, not what they must: if a cheaper laptop is clearly the
+  // better fit (a student with ₹3 lakh doesn't need a gaming rig), recommend that one.
+  const cheaper = rank(all.filter((l) => l.price < b.min && l.score > pool[0].score + 0.4), false)[0];
+  const best = cheaper || pool[0];
+  // A realistic stretch: at most 30% over the top of the budget, and clearly better.
+  const stretch = !cheaper && rank(all.filter((l) => l.price >= b.max && l.price <= b.max * 1.3 && l.score > best.score + 0.4))[0];
+  const runnerUp = cheaper ? { ...pool[0], tag: 'Best in your budget' }
+    : stretch ? { ...stretch, tag: 'Worth stretching for' } : pool[1] && { ...pool[1], tag: 'Also a great fit' };
+  // Weak: not really built for any big part of what they said (a share of 30% or more).
+  const weak = Object.entries(sh).filter(([, v]) => v >= 0.3).every(([p]) => (best.w[p] || 0) < 2);
+  return { best, runnerUp, persona, scores, weak, saves: !!cheaper };
 }
 
 export function personaOf(laptopId) {

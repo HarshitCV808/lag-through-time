@@ -33,11 +33,12 @@ After the levels:
 
 1. **Same you, four laptops.** Your time in each era, Intel Core Ultra Series 3 specs (up to 50 TOPS NPU, up to 120 TOPS Arc GPU, up to 180 TOPS in total), and plain-word explanations of TOPS and NPU.
 2. **Why not a cheaper laptop?** Calls out the cheap-laptop trap, then three tap-to-flip cards: a Snapdragon (ARM) laptop, a MacBook and an AMD Ryzen AI laptop on the front, the Intel answer on the back.
-3. **Budget.** Under ₹1.5 lakh, ₹1.5–2.5 lakh, above ₹2.5 lakh, or "show me the best fit".
-4. **Your match.** Every option picked adds points to four personas (Student, Creator, Gamer, Hustler). Each of the 10 real Core Ultra Series 3 laptops is weighted per persona, and the best-scoring laptop inside the budget wins. The result shows:
+3. **Budget.** Under ₹1.5 lakh, ₹1.5–2 lakh, ₹2–3 lakh, above ₹3 lakh, or "show me the best fit".
+4. **Your match.** Every option picked adds points to four personas (Student, Creator, Gamer, Hustler). Each of the 10 real Core Ultra Series 3 laptops is weighted per persona, and the best-scoring laptop inside the chosen budget band wins (mixed answers are blended by share). A clearly better cheaper laptop wins instead ("you don't need to spend that much"), and if nothing in the band is built for what you need, a heads-up says so honestly. The result shows:
    - the shopper's persona mix
    - the laptop, its ₹ price and three reasons it fits
-   - a runner-up: either "Worth stretching for" (at most 30% over budget) or "Also a great fit"
+   - a runner-up: "Worth stretching for" (at most 30% over budget), "Best in your budget" or "Also a great fit"
+   - one reason written for your persona, plus two facts about the laptop
    - the next step: get a hands-on demo, or scan the QR code / tap "Save my match" to take the pick home. The link carries the persona scores and budget (`?s=student-creator-gamer-pro&b=budget`), so the phone shows exactly the same persona, laptop and runner-up as the kiosk.
 
 If nobody touches the screen for 90 seconds, the game goes back to the title for the next shopper.
