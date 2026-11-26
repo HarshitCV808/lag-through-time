@@ -14,6 +14,7 @@ export default class Frame extends Phaser.Scene {
   }
 
   setEra(era) {
+    this.scene.get('Glass')?.setEra(era);
     if (era === this.era) return;
     this.era = era;
     this.draw();

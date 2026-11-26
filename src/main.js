@@ -10,6 +10,7 @@ import Versus from './scenes/Versus.js';
 import Result from './scenes/Result.js';
 import Warp from './scenes/Warp.js';
 import Frame from './scenes/Frame.js';
+import Glass from './scenes/Glass.js';
 
 const FONTS = [
   '20px VT323', '400 20px Silkscreen', '700 20px Silkscreen',
@@ -68,7 +69,7 @@ addEventListener('keydown', firstGesture, true);
     scale: { mode: Phaser.Scale.NONE, width: w, height: h, zoom: 1 / DPR },
     input: { activePointers: 2 },
     render: { roundPixels: true, antialias: true }, // whole-pixel positions keep text sharp
-    scene: [Frame, Title, Warp, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result],
+    scene: [Frame, Title, Warp, Level1Dos, Level2Battery, Level3Cloud, Level4AIPC, Versus, Result, Glass],
   });
   // Always clip each scene to its camera viewport, so a level never draws outside its
   // era computer's screen. Phaser only clips while an internal "custom viewports" counter

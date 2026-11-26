@@ -6,7 +6,7 @@ import { layoutFrame } from '../frame.js';
 
 // Levels are played on the screen of a computer from their era (see frame.js).
 const ERA_OF = { L1: 'dos', L2: 'y2k', L3: 'cloud', L4: 'ai' };
-import { sfx } from '../audio.js';
+import { sfx, ambience } from '../audio.js';
 
 // Shared scene plumbing: responsive sizing, era backdrop, modal panels, scene hand-off.
 // Subclasses implement build(data), layout() and optionally onKey(e) / update().
@@ -59,6 +59,7 @@ export default class Base extends Phaser.Scene {
     this.overlayFn = null;
     this.overlayKeys = null;
     this.bgG = null;
+    ambience(null); // only the café level turns ambience on
     this.updateView();
     this.input.keyboard.on('keydown', (e) => {
       const f = this.overlayKeys?.[e.key];
@@ -72,6 +73,39 @@ export default class Base extends Phaser.Scene {
     this.events.once('shutdown', () => this.scale.off('resize', r));
     const c = Phaser.Display.Color.IntegerToRGB(hex(this.th.bg));
     this.cameras.main.fadeIn(280, c.r, c.g, c.b);
+    if (this.view?.full && !this.reduced) this.introZoom();
+  }
+
+  // Level intro on full desk scenes: start a little zoomed out on the room, then glide in
+  // to the computer. Room (Frame), game camera and glass move together around the screen's
+  // centre so they stay aligned; the tween ends at exactly 1:1, so text lands crisp.
+  introZoom() {
+    const cams = [this.scene.get('Frame').cameras.main, this.scene.get('Glass').cameras.main];
+    const apply = (z) => {
+      const v = this.view;
+      if (!v || !v.full) return;
+      const Wc = this.scale.width;
+      const Hc = this.scale.height;
+      const cx = v.x + v.w / 2;
+      const cy = v.y + v.h / 2;
+      cams.forEach((cam) => { cam.setZoom(z); cam.centerOn(cx + (Wc / 2 - cx) / z, cy + (Hc / 2 - cy) / z); });
+      const cam = this.cameras.main;
+      cam.setViewport(Math.round(cx - (v.w * z) / 2), Math.round(cy - (v.h * z) / 2), Math.round(v.w * z), Math.round(v.h * z));
+      cam.setZoom(z);
+      cam.centerOn(v.w / 2, v.h / 2);
+    };
+    const st = { z: 0.84 };
+    apply(st.z);
+    this.tweens.add({
+      targets: st, z: 1, duration: 950, ease: 'Cubic.Out',
+      onUpdate: () => apply(st.z),
+      onComplete: () => {
+        cams.forEach((cam) => { cam.setZoom(1); cam.setScroll(0, 0); });
+        this.cameras.main.setZoom(1).setScroll(0, 0);
+        this.updateView();
+      },
+    });
+    this.events.once('shutdown', () => cams.forEach((cam) => { cam.setZoom(1); cam.setScroll(0, 0); }));
   }
 
   relayout() {

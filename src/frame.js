@@ -40,13 +40,27 @@ export function layoutFrame(W, H, era) {
 export function drawFrame(g, addText, W, H, L) {
   if (!L.full) {
     // Slim mode: just the era's wall colour; room decor would only peek in as fragments.
-    g.fillStyle({ dos: 0x6b4426, y2k: 0x7aa6c2, cloud: 0x7a3b22, ai: 0x0d1433 }[L.era]).fillRect(0, 0, W, H);
+    g.fillStyle(WALL[L.era]).fillRect(0, 0, W, H);
     return slimBezel(g, L);
   }
   const room = { dos: room1981, y2k: room2003, cloud: room2015, ai: room2026 }[L.era];
   const deskY = L.y + L.h + L.bez + L.below * 0.45;
+  g.fillStyle(WALL[L.era]).fillRect(-W, -H, W * 3, H * 3); // beyond the edges, for the zoom-in intro
   room(g, addText, W, H, deskY, L);
+  screenGlow(g, L, deskY);
   ({ dos: crtDesktop, y2k: laptop2003, cloud: laptop2015, ai: laptop2026 })[L.era](g, addText, L);
+}
+
+const WALL = { dos: 0x6b4426, y2k: 0x7aa6c2, cloud: 0x7a3b22, ai: 0x0d1433 };
+const GLOW = { dos: 0x3dff7a, y2k: 0x9fd8ff, cloud: 0xfff4e0, ai: 0x00c7fd };
+
+// Light from the screen spilling onto the wall behind and the desk in front.
+function screenGlow(g, L, deskY) {
+  const cx = L.x + L.w / 2;
+  const cy = L.y + L.h / 2;
+  const c = GLOW[L.era];
+  [[1.0, 0.05], [0.78, 0.05], [0.56, 0.06]].forEach(([r, a]) => g.fillStyle(c, a).fillCircle(cx, cy, L.w * r));
+  g.fillStyle(c, 0.08).fillEllipse(cx, deskY + L.h * 0.12, L.w * 1.5, L.h * 0.35);
 }
 
 function slimBezel(g, L) {
@@ -58,8 +72,8 @@ function slimBezel(g, L) {
 }
 
 const desk = (g, W, H, deskY, top, front) => {
-  g.fillStyle(top).fillRect(0, deskY, W, H - deskY);
-  g.fillStyle(front).fillRect(0, deskY, W, Math.max(4, (H - deskY) * 0.08));
+  g.fillStyle(top).fillRect(-W, deskY, W * 3, H * 2);
+  g.fillStyle(front).fillRect(-W, deskY, W * 3, Math.max(4, (H - deskY) * 0.08));
 };
 
 // ---- rooms ------------------------------------------------------------------------------

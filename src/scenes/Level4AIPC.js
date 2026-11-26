@@ -10,7 +10,7 @@ import { MOMENTS } from '../data.js';
 // current screen size, so rotating the phone mid-game just reflows.
 const PLAY_S = 4.5;
 const INTRO_S = 1.1;
-const RESULT_S = 1.9;
+const RESULT_S = 2.4;
 const MASH_NEED = 8;
 const HOLD_S = 1.2;
 
@@ -20,7 +20,7 @@ export default class Level4AIPC extends Base {
   build() {
     this.th = THEMES.ai;
     music('ai');
-    Object.assign(this, { mi: -1, phase: 'idle', timer: 0, wins: 0, batt: 100, mg: null, clock: 0 });
+    Object.assign(this, { mi: -1, phase: 'idle', timer: 0, wins: 0, batt: 100, mg: null, clock: 0, log: [] });
     this.makeHud('Level 4 of 4   2026');
     this.g = this.add.graphics();
     const st = (font, weight, color) => ({ fontFamily: font, fontStyle: weight, color });
@@ -28,6 +28,9 @@ export default class Level4AIPC extends Base {
     this.placeT = this.add.text(0, 0, '', st('Manrope', '700', this.th.dim));
     this.instrT = this.add.text(0, 0, '', { ...st('Unbounded', '800', this.th.accent), align: 'center' }).setOrigin(0.5, 0);
     this.statusT = this.add.text(0, 0, '', st('Manrope', '700', this.th.dim)).setOrigin(0.5, 0);
+    // What each moment did stays on screen: a running "Done today" list on wide screens,
+    // the latest feature in a band under the play area on tall ones.
+    this.logC = this.add.container(0, 0);
     this.stampT = this.add.text(0, 0, '', { ...st('Manrope', '800', '#ffffff'), align: 'center', stroke: '#060d2b', strokeThickness: 8 }).setOrigin(0.5).setDepth(20);
     // Reusable in-stage labels (each microgame uses some of them).
     this.la = this.add.text(0, 0, '', st('Manrope', '700', '#ffffff')).setOrigin(0.5).setDepth(5);
@@ -150,8 +153,10 @@ export default class Level4AIPC extends Base {
     this.wins++;
     this.batt -= 6;
     sfx('ok');
+    sfx('whoosh');
     const col = ENGINE_COLORS[this.m.engine];
     this.stampT.setText(this.m.done).setColor(col);
+    this.addLog(true);
     confetti(this, this.R.x + this.R.w / 2, this.R.y + this.R.h / 2, [col, '#ffffff', '#00c7fd'], 40);
     if (this.m.id === 'reel') this.tweens.add({ targets: this.mg, cut: 1, duration: 400 });
     this.settle();
@@ -167,6 +172,7 @@ export default class Level4AIPC extends Base {
     this.batt -= 6;
     sfx('no');
     this.stampT.setText(`Too slow! ${this.m.done}`).setColor('#ffd9e8');
+    this.addLog(false);
     if (this.m.id === 'reel') this.mg.cut = 1;
     this.settle();
   }
@@ -215,6 +221,7 @@ export default class Level4AIPC extends Base {
       this.statusT.setOrigin(0, 0).setAlign('left').setPosition(x0, barY + s(20)).setFontSize(s(13)).setWordWrapWidth(lw, true);
       const sx = x0 + lw + s(22);
       this.R = { x: sx, y, w: this.W - sx - pad, h: Math.max(s(150), this.H - y - pad) };
+      this.logBox = { wide: true, x: x0, y: barY + s(62), w: lw };
     } else {
       const cw = Math.min(this.W - pad * 2, s(560));
       const x0 = (this.W - cw) / 2;
@@ -226,13 +233,51 @@ export default class Level4AIPC extends Base {
       const barY = iy + s(tight ? 30 : 66); // room for a two-line instruction
       this.bar = { x: x0, y: barY, w: cw, h: s(8) };
       const stageTop = barY + s(16);
-      this.R = { x: x0, y: stageTop, w: cw, h: Math.max(s(150), this.H - pad - s(30) - stageTop) };
-      this.statusT.setOrigin(0.5, 0).setAlign('center').setPosition(this.W / 2, this.R.y + this.R.h + s(8)).setFontSize(s(13)).setWordWrapWidth(cw, true);
+      const band = s(46); // latest feature stays readable here
+      this.R = { x: x0, y: stageTop, w: cw, h: Math.max(s(140), this.H - pad - s(30) - band - stageTop) };
+      this.logBox = { wide: false, x: x0, y: this.R.y + this.R.h + s(8), w: cw };
+      this.statusT.setOrigin(0.5, 0).setAlign('center').setPosition(this.W / 2, this.R.y + this.R.h + band + s(8)).setFontSize(s(13)).setWordWrapWidth(cw, true);
     }
     const R = this.R;
     this.stampT.setPosition(R.x + R.w / 2, R.y + R.h / 2).setFontSize(s(18)).setWordWrapWidth(R.w - s(30), true);
     this.la.setFontSize(s(15));
     this.lc.setFontSize(s(14)).setWordWrapWidth(R.w - s(40), true);
+    this.renderLog();
+  }
+
+  addLog(ok) {
+    this.log.push({ m: this.m, ok });
+    this.renderLog(true);
+  }
+
+  renderLog(fresh = false) {
+    const b = this.logBox;
+    if (!b) return;
+    const s = (n) => this.s(n);
+    this.logC.removeAll(true);
+    const text = (x, y, str, size, color, weight = '700') => {
+      const t = this.add.text(x, y, str, { fontFamily: 'Manrope', fontStyle: weight, fontSize: s(size), color, wordWrap: { width: b.w, useAdvancedWrap: true } });
+      this.logC.add(t);
+      return t;
+    };
+    let last = null;
+    if (b.wide) {
+      if (!this.log.length) return;
+      let y = b.y;
+      y += text(b.x, y, 'Done today, all on-device', 13, this.th.dim).height + s(8);
+      this.log.forEach((l) => {
+        last = text(b.x, y, `${l.ok ? '✓' : '•'} ${l.m.short}`, 15, l.ok ? ENGINE_COLORS[l.m.engine] : this.th.dim);
+        y += last.height + s(6);
+      });
+    } else {
+      const l = this.log[this.log.length - 1];
+      if (!l) return;
+      last = text(b.x, b.y, `✓ ${l.m.done}`, 14, ENGINE_COLORS[l.m.engine]);
+    }
+    if (fresh && last && !this.reduced) {
+      last.setAlpha(0);
+      this.tweens.add({ targets: last, alpha: 1, duration: 300, delay: 250 });
+    }
   }
 
   // CC sits below the speech bubble and right of the lecturer, so it never covers either.
@@ -381,7 +426,8 @@ export default class Level4AIPC extends Base {
     const seg = s(70);
     for (let d = seg - (mg.scroll % seg); d < bot - top; d += seg) {
       const t = d / (bot - top);
-      g.fillStyle(0xffc145).fillRect(cx - s(3) - t * s(4), top + d, s(6) + t * s(8), s(14) + t * s(20));
+      const dashH = Math.min(s(14) + t * s(20), bot - (top + d)); // never past the stage edge
+      if (dashH > 0) g.fillStyle(0xffc145).fillRect(cx - s(3) - t * s(4), top + d, s(6) + t * s(8), dashH);
     }
     g.fillStyle(0xff5fa2).fillRoundedRect(cx - s(30), bot - s(70), s(60), s(50), s(10));
     this.la.setVisible(true).setText(`${Math.round(fps)} FPS`).setColor(fps > 60 ? '#2ef2c8' : '#ff8a8a').setPosition(R.x + s(64), R.y + s(32));
@@ -435,7 +481,7 @@ export default class Level4AIPC extends Base {
     this.time.delayedCall(500, () => this.ask({
       kicker: `${this.wins}/${MOMENTS.length} moments nailed in ${sec}s`,
       title: 'Ekdum instant.',
-      body: `A whole day, all on-device, battery still at ${Math.round(this.batt)}%. No uploads, no waiting.`,
+      body: `${this.log.map((l) => `✓ ${l.m.short}`).join('\n')}\n\nA whole day, all on-device, battery still at ${Math.round(this.batt)}%.`,
       buttons: [{ label: 'See the upgrade', onClick: () => this.go('Versus') }],
     }));
   }

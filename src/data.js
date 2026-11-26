@@ -70,27 +70,27 @@ export const MOMENTS = [
   {
     id: 'lecture', clock: '8:00 AM', place: 'Lecture', useCase: 'Learning',
     verb: 'TAP', instruction: 'Tap CC for live captions', engine: 'NPU',
-    done: 'Live captions, running on the NPU with Wi-Fi off',
+    done: 'Live captions, running on the NPU with Wi-Fi off', short: 'Live captions (NPU)',
   },
   {
     id: 'call', clock: '11:00 AM', place: 'Video call', useCase: 'Work',
     verb: 'SWIPE', instruction: 'Swipe to blur your messy room', engine: 'NPU',
-    done: 'Background blur on the NPU, all call long, barely touching the battery',
+    done: 'Background blur on the NPU, all call long, barely touching the battery', short: 'Background blur (NPU)',
   },
   {
     id: 'reel', clock: '4:00 PM', place: 'Reel edit', useCase: 'Creativity',
     verb: 'TAP', instruction: 'Tap yourself to cut out the background', engine: 'GPU',
-    done: 'Background removed by the built-in Intel GPU, right on your laptop',
+    done: 'Background removed by the built-in Intel GPU, right on your laptop', short: 'Photo cut-out (GPU)',
   },
   {
     id: 'game', clock: '9:00 PM', place: 'Gaming', useCase: 'Gaming',
     verb: 'HOLD', instruction: 'Hold BOOST to switch on AI upscaling', engine: 'GPU',
-    done: 'XeSS AI upscaling on Intel graphics: smoother frames',
+    done: 'XeSS AI upscaling on Intel graphics: smoother frames', short: 'XeSS upscaling (GPU)',
   },
   {
     id: 'notes', clock: '11:30 PM', place: 'Exam night', useCase: 'Everyday',
     verb: 'MASH', instruction: 'Mash to summarise 40 pages, offline', engine: 'NPU',
-    done: 'Notes summarised on-device. No Wi-Fi, nothing uploaded',
+    done: 'Notes summarised on-device. No Wi-Fi, nothing uploaded', short: 'Notes summary (NPU)',
   },
 ];
 

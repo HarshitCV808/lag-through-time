@@ -30,7 +30,65 @@ function tone(f, dur, type = 'square', vol = 0.2, when = 0, slideTo = null) {
   o.stop(t + dur + 0.05);
 }
 
+// Filtered white noise: the raw material for whirrs, modems and crowd murmur.
+let noiseBuf = null;
+function noise(dur, vol, when = 0, f = 1000, q = 1, sweepTo = null, type = 'bandpass') {
+  if (!noiseBuf) {
+    noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const t = ctx.currentTime + when;
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuf;
+  src.loop = true;
+  const bp = ctx.createBiquadFilter();
+  bp.type = type;
+  bp.frequency.setValueAtTime(f, t);
+  if (sweepTo) bp.frequency.exponentialRampToValueAtTime(sweepTo, t + dur);
+  bp.Q.value = q;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + Math.min(0.03, dur / 3));
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp).connect(g).connect(master);
+  src.start(t);
+  src.stop(t + dur + 0.05);
+}
+
+// Era sound effects.
+const floppy = () => {
+  tone(70, 0.08, 'square', 0.15); // drive clunk
+  noise(0.9, 0.12, 0.05, 900, 3); // spinning whirr
+  for (let i = 0; i < 7; i++) tone(180 + (i % 2) * 40, 0.03, 'square', 0.08, 0.15 + i * 0.11); // head steps
+};
+const printer = () => {
+  for (let i = 0; i < 14; i++) noise(0.03, 0.2, i * 0.07, 3500, 2); // dot-matrix ticks
+  noise(0.25, 0.1, 1.0, 600, 1); // paper feed
+};
+const modem = () => {
+  // Dial-up: four dial tones, then the handshake screech.
+  [[697, 1209], [770, 1336], [852, 1477], [941, 1336]].forEach(([a, b], i) => {
+    tone(a, 0.09, 'sine', 0.05, i * 0.12);
+    tone(b, 0.09, 'sine', 0.05, i * 0.12);
+  });
+  tone(2100, 0.35, 'sine', 0.05, 0.6);
+  noise(0.45, 0.07, 1.0, 1800, 4);
+  tone(1200, 0.3, 'sawtooth', 0.03, 1.45, 2400);
+  noise(0.6, 0.06, 1.75, 2600, 2, 900);
+};
+const whoosh = () => {
+  noise(0.5, 0.18, 0, 300, 1.5, 3500);
+  tone(1320, 0.3, 'sine', 0.06, 0.2);
+  tone(1980, 0.35, 'sine', 0.05, 0.3);
+};
+
 const SFX = {
+  floppy,
+  printer,
+  modem,
+  whoosh,
+  ping: () => { tone(1320, 0.08, 'sine', 0.12); tone(1760, 0.12, 'sine', 0.1, 0.07); },
   click: () => tone(660, 0.06, 'square', 0.12),
   key: () => tone(1200, 0.03, 'square', 0.08),
   ok: () => { tone(660, 0.1, 'triangle', 0.2); tone(990, 0.16, 'triangle', 0.2, 0.08); },
@@ -66,12 +124,36 @@ function startLoop() {
   }, step);
 }
 
+// Café ambience for 2015: crowd murmur that swells and dips, plus the odd cup clink.
+let amb = null;
+let ambName = null;
+function stopAmb() {
+  if (amb) clearInterval(amb);
+  amb = null;
+}
+function startAmb() {
+  stopAmb();
+  if (muted || !ctx || ambName !== 'cafe') return;
+  const tick = () => {
+    noise(0.7, 0.025 + Math.random() * 0.03, 0, 450 + Math.random() * 500, 0.8);
+    if (Math.random() < 0.12) tone(2600 + Math.random() * 600, 0.12, 'sine', 0.03);
+  };
+  tick();
+  amb = setInterval(tick, 380);
+}
+
+export function ambience(name) {
+  ambName = name;
+  startAmb();
+}
+
 export const isMuted = () => muted;
 
 export function unlock() {
   ensure();
   ctx.resume();
   if (!loop) startLoop();
+  if (!amb) startAmb();
 }
 
 export function setMuted(m) {
@@ -81,6 +163,7 @@ export function setMuted(m) {
     ctx.resume();
   }
   startLoop();
+  startAmb();
 }
 
 export function sfx(name) {
@@ -93,4 +176,6 @@ export function music(name) {
   startLoop();
 }
 
-document.addEventListener('visibilitychange', () => (document.hidden ? stopLoop() : startLoop()));
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { stopLoop(); stopAmb(); } else { startLoop(); startAmb(); }
+});

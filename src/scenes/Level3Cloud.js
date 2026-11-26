@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import Base from './Base.js';
 import { THEMES, hex } from '../theme.js';
 import { Button, drawCard } from '../ui.js';
-import { music, sfx } from '../audio.js';
+import { music, sfx, ambience } from '../audio.js';
 import { PERMISSIONS } from '../data.js';
 
 // Swipe the permissions: cloud AI keeps asking for your data while your selfie
@@ -38,6 +38,7 @@ export default class Level3Cloud extends Base {
   }
 
   start() {
+    ambience('cafe');
     this.running = true;
     this.t0 = this.time.now;
     this.deny.setVisible(true);
@@ -69,6 +70,7 @@ export default class Level3Cloud extends Base {
       return;
     }
     this.countT.setText(`Request ${this.ci + 1} of ${this.deck.length}`);
+    sfx('ping');
     const c = (this.card = this.add.container(0, 0).setDepth(10));
     c.perm = p;
     c.g = this.add.graphics();
@@ -226,6 +228,7 @@ export default class Level3Cloud extends Base {
   }
 
   finish() {
+    ambience(null);
     this.running = false;
     this.done = true;
     const sec = this.secs();

@@ -17,7 +17,7 @@ Every level is played **on the screen of a computer from its era, in a room from
 | 2015 | Thin aluminium laptop | Café: brick wall, chalk menu, pendant lamps, coffee |
 | 2026 | Near-borderless 3:2 AI PC with glowing keys | Night-time room: neon strip, city window, plant |
 
-On laptop and kiosk screens (and wide landscape) the whole desk scene shows. Upright phones and short landscape phones get a slim era-coloured bezel instead, so the game stays big enough to play.
+On laptop and kiosk screens (and wide landscape) the whole desk scene shows, and each level opens by gliding in from the room to the screen. The screen's light spills onto the desk; the 1981 CRT has scanlines and curved glass, the laptops a faint reflection. Era sounds: floppy whirr and printer in 1981, a dial-up modem in 2003, café chatter in 2015, an AI whoosh in 2026. Upright phones and short landscape phones get a slim era-coloured bezel instead, so the game stays big enough to play.
 
 
 Each level opens with one screen: what the era is about, plus a quick **multi-select question** about the shopper, such as "What do you do on a laptop most days?" or "Where does your laptop go with you?". The shopper picks as many options as apply. A **time-warp** animation carries them from one era to the next.
@@ -27,7 +27,7 @@ Each level opens with one screen: what the era is about, plus a quick **multi-se
 | 1 | 1981, first PC | Type `DIR`, `RUN`, `PRINT` on a green-screen terminal where every key takes almost a second to appear (a "KEYS WAITING FOR CPU" buffer and busy spinner show the lag), then swap the floppy disk | One task at a time, text only, slow |
 | 2 | 2003, Battery Dash | Endless-runner: a little laptop runs to class, jumps coffee cups and bags, and grabs plug points before the battery dies | Short battery life, chained to the charger |
 | 3 | 2015, Swipe the permissions | Dating-app style swipes: cloud AI keeps asking for your data (contacts, location, face data…). Swipe left to deny, right to allow, while Wi-Fi drops freeze everything | Cloud AI needs internet, and your data leaves the laptop |
-| 4 | 2026, AI Day | Five 4-second microgames across a Gen-Z day: 8 AM lecture (tap CC for live captions), 11 AM video call (swipe to blur a messy room), 4 PM reel edit (tap yourself to cut out the background), 9 PM gaming (hold BOOST for XeSS upscaling), 11:30 PM exam night (mash to summarise notes offline) | On-device AI across learning, work, creativity, gaming and everyday life: instant, offline, private, battery-friendly |
+| 4 | 2026, AI Day | Five 4-second microgames across a Gen-Z day: 8 AM lecture (tap CC for live captions), 11 AM video call (swipe to blur a messy room), 4 PM reel edit (tap yourself to cut out the background), 9 PM gaming (hold BOOST for XeSS upscaling), 11:30 PM exam night (mash to summarise notes offline). Each feature stays listed on screen ("Done today") and the end screen recaps all five | On-device AI across learning, work, creativity, gaming and everyday life: instant, offline, private, battery-friendly |
 
 After the levels:
 

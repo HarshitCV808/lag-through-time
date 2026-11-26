@@ -108,6 +108,7 @@ export default class Level1Dos extends Base {
       this.next();
     } else if (word === 'RUN') {
       this.setGoal('LOADING…');
+      sfx('floppy');
       this.lines.push('LOADING HOMEWORK.BAS ');
       this.dots(6, 2600, () => {
         this.lines.push('INSERT DISK 2, THEN TAP THE DISK');
@@ -116,6 +117,7 @@ export default class Level1Dos extends Base {
       });
     } else {
       this.setGoal('PRINTING…');
+      sfx('printer');
       this.lines.push('PRINTING ');
       this.dots(6, 2600, () => {
         this.lines.push('DONE. TEXT ONLY. NO PHOTOS, NO COLOUR.');
@@ -156,6 +158,7 @@ export default class Level1Dos extends Base {
       this.disk = null;
       this.lines.push('READING DISK 2 ');
       this.setGoal('READING DISK…');
+      sfx('floppy');
       this.dots(5, 2000, () => {
         this.lines.push('HOMEWORK READY.', '');
         this.next();

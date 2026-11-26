@@ -42,6 +42,7 @@ export default class Level2Battery extends Base {
   }
 
   start() {
+    sfx('modem'); // 2003: the dial-up handshake
     this.running = true;
     this.t0 = this.time.now;
     this.gapLeft = this.s(260);
