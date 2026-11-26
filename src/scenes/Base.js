@@ -17,18 +17,21 @@ export default class Base extends Phaser.Scene {
 
   // Point the camera at the era computer's screen (levels) or the whole canvas.
   updateView() {
-    const era = ERA_OF[this.scene.key] || null;
+    const era = (this.eraKey || ERA_OF[this.scene.key]) || null;
     this.scene.get('Frame')?.setEra(era);
     this.view = era ? layoutFrame(this.scale.width, this.scale.height, era) : null;
     const v = this.view || { x: 0, y: 0, w: this.scale.width, h: this.scale.height };
     this.cameras.main.setViewport(Math.round(v.x), Math.round(v.y), Math.round(v.w), Math.round(v.h));
   }
 
-  // Does the DOM mute button (canvas top-right) sit over this scene's screen?
+  // Width of the top-right DOM buttons: sound, plus pause during levels.
+  get buttonsW() { return (ERA_OF[this.scene.key] ? 106 : 54) * DPR; }
+
+  // Do the DOM buttons (canvas top-right) sit over this scene's screen?
   get muteOverlap() {
     const v = this.view;
     if (!v) return true;
-    const bx = this.scale.width - 54 * DPR;
+    const bx = this.scale.width - this.buttonsW;
     return bx < v.x + v.w && 54 * DPR > v.y;
   }
   get portrait() { return this.H > this.W; }
@@ -59,7 +62,10 @@ export default class Base extends Phaser.Scene {
     this.overlayFn = null;
     this.overlayKeys = null;
     this.bgG = null;
-    ambience(null); // only the café level turns ambience on
+    if (!this.overlayScene) {
+      ambience(null); // only the café level turns ambience on
+      document.getElementById('pause').hidden = !ERA_OF[this.scene.key]; // pause only in levels
+    }
     this.updateView();
     this.input.keyboard.on('keydown', (e) => {
       const f = this.overlayKeys?.[e.key];
@@ -72,6 +78,7 @@ export default class Base extends Phaser.Scene {
     this.scale.on('resize', r);
     this.events.once('shutdown', () => this.scale.off('resize', r));
     const c = Phaser.Display.Color.IntegerToRGB(hex(this.th.bg));
+    if (this.overlayScene) return;
     this.cameras.main.fadeIn(280, c.r, c.g, c.b);
     if (this.view?.full && !this.reduced) this.introZoom();
   }
@@ -110,7 +117,7 @@ export default class Base extends Phaser.Scene {
 
   relayout() {
     this.bgG?.destroy();
-    this.bgG = backdrop(this, this.th);
+    if (!this.overlayScene) this.bgG = backdrop(this, this.th);
     this.layout?.();
     if (this.overlayFn) {
       this.overlay?.destroy();
@@ -149,7 +156,10 @@ export default class Base extends Phaser.Scene {
       const done = () => {
         if (!picked.size) { hint = 'Pick at least one'; sfx('no'); this.showOverlay(build, false); return; }
         this.hideOverlay();
-        this.registry.set('answers', [...(this.registry.get('answers') || []), ...[...picked].map((i) => q.options[i].w)]);
+        // Stored per level, so restarting a level replaces its answers instead of adding twice.
+        const byLevel = { ...(this.registry.get('answersByLevel') || {}), [levelKey]: [...picked].map((i) => q.options[i].w) };
+        this.registry.set('answersByLevel', byLevel);
+        this.registry.set('answers', Object.values(byLevel).flat());
         onDone();
       };
       const on = this.th.chipOn;
@@ -229,7 +239,7 @@ export default class Base extends Phaser.Scene {
     const fs = this.s(this.th.name === 'dos' ? 22 : 15);
     this.hudL.setPosition(this.s(18), this.top).setFontSize(fs);
     // Keep the timer clear of the mute button when it overlaps the screen.
-    const right = this.muteOverlap ? this.scale.width - 66 * DPR - (this.view?.x || 0) : this.W - this.s(18);
+    const right = this.muteOverlap ? this.scale.width - this.buttonsW - 12 * DPR - (this.view?.x || 0) : this.W - this.s(18);
     this.hudT.setOrigin(1, 0).setPosition(Math.min(right, this.W - this.s(18)), this.top).setFontSize(fs);
     // Content starts below the HUD and the 44px mute button (top-right, ~10px inset).
     const clear = this.muteOverlap ? 62 * DPR - (this.view?.y || 0) : 0;

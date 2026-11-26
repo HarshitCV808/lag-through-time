@@ -48,7 +48,8 @@ If nobody touches the screen for 90 seconds, the game goes back to the title for
 - **Crisp text everywhere.** The canvas renders at the screen's full pixel density (up to 3x) and is pinned to the viewport so fractional densities never blur it. Text is drawn on whole pixels with whole-pixel font sizes, and the Silkscreen pixel font snaps to its 8px grid. Screens that don't fit are laid out again with smaller type, never shrunk.
 - **Works anywhere.** Runs in the browser on the store's demo laptop or a shopper's phone, in portrait or landscape, and reflows if the screen rotates mid-level.
 - **Zero tech knowledge needed.** Big tap targets, keyboard shortcuts (Enter, number keys, letters), and no jargon without a plain-word explanation.
-- **Tap to start.** The site opens on a short splash; the first tap starts the music (browsers block sound before the first tap). Saved-match links skip it.
+- **Opening gag + tap to start.** A "loading your laptop" bar stalls at 3% on a 1981 screen, glitches into a stuck 2003 download and 2015 buffering, then an Intel-blue flash snaps it to 100%: "Your AI PC is ready. Tap anywhere to start". That first tap starts the music (browsers block sound before it). Saved-match links skip it.
+- **Pause.** A pause button next to the sound button (or Esc) freezes the level and shows an era-styled card with Resume, Restart level and Quit to title. It also pauses itself when the phone locks or the tab is hidden. Restarting a level replaces that level's answers.
 - **Era-styled touch effects.** Every tap leaves a ripple and the mouse leaves a trail, styled per era: green pixels (1981), blue click rings and ghost arrows (2003), soft blue ripples (2015), cyan glow and sparks (2026).
 - **Sound.** On by default, made with Web Audio so there are no files to load. It starts on the first tap, as browsers require, and the speaker button mutes it at any time.
 - **No backend, no sign-in, no tracking.**

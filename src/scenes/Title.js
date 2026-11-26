@@ -26,6 +26,7 @@ export default class Title extends Base {
       this.scene.start('Result', share ? { share } : { match });
     }
     this.registry.set('answers', []);
+    this.registry.set('answersByLevel', {});
     this.registry.set('budget', 'any');
     this.registry.set('privacy', null);
     this.registry.set('times', {});

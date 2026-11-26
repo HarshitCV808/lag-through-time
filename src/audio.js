@@ -5,6 +5,7 @@ let master = null;
 let muted = false;
 let era = null;
 let loop = null;
+let paused = false; // game paused: music and ambience silent
 
 const ensure = () => {
   if (ctx) return;
@@ -115,7 +116,7 @@ function stopLoop() {
 function startLoop() {
   stopLoop();
   const song = SONGS[era];
-  if (muted || !song || !ctx) return;
+  if (muted || paused || !song || !ctx) return;
   const step = 60000 / song.bpm / 2;
   let i = 0;
   loop = setInterval(() => {
@@ -133,7 +134,7 @@ function stopAmb() {
 }
 function startAmb() {
   stopAmb();
-  if (muted || !ctx || ambName !== 'cafe') return;
+  if (muted || paused || !ctx || ambName !== 'cafe') return;
   const tick = () => {
     noise(0.7, 0.025 + Math.random() * 0.03, 0, 450 + Math.random() * 500, 0.8);
     if (Math.random() < 0.12) tone(2600 + Math.random() * 600, 0.12, 'sine', 0.03);
@@ -148,6 +149,11 @@ export function ambience(name) {
 }
 
 export const isMuted = () => muted;
+
+export function pauseAudio(on) {
+  paused = on;
+  if (on) { stopLoop(); stopAmb(); } else { startLoop(); startAmb(); }
+}
 
 // Called on user gestures until audio is actually running. Browsers only allow audio to
 // start inside a real gesture (on phones that's the finger lifting, not pointerdown), and

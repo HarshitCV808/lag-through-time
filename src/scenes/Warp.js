@@ -10,6 +10,7 @@ export default class Warp extends Phaser.Scene {
 
   create({ next, from, to }) {
     this.scene.get('Frame').setEra(null);
+    document.getElementById('pause').hidden = true;
     this.next = next;
     this.from = from;
     this.to = to;
